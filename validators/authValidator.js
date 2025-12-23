@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const { validateSlots } = require("./timeSlotValidator");
 
 // DOCTOR REGISTRATION VALIDATION
 const doctorRegistrationSchema = Joi.object({
@@ -54,6 +55,30 @@ const doctorRegistrationSchema = Joi.object({
   bio: Joi.string().max(1000).optional(),
 
   ratePerSession: Joi.number().min(0).optional(),
+  // Optional slots field: accept JSON string or array; validated by validateSlots
+  slots: Joi.any()
+    .optional()
+    .custom((value, helpers) => {
+      try {
+        let slots = value;
+        if (typeof slots === "string") {
+          // try parse JSON string
+          try {
+            slots = JSON.parse(slots);
+          } catch (e) {
+            return helpers.error("any.invalid", {
+              message: "Slots must be valid JSON or an array",
+            });
+          }
+        }
+
+        validateSlots(slots);
+        return value;
+      } catch (err) {
+        return helpers.error("any.invalid", { message: err.message });
+      }
+    })
+    .messages({ "any.invalid": "{{#message}}" }),
 });
 
 // PATIENT REGISTRATION VALIDATION

@@ -1,7 +1,8 @@
 const nodemailer = require("nodemailer");
 const { createTransporter } = require("../config/nodemailer");
 const {
-  welcomeEmailTemplate,
+  welcomeDoctorEmailTemplate,
+  welcomePatientEmailTemplate,
   passwordResetEmail,
 } = require("../utils/emailTemplates");
 
@@ -17,18 +18,22 @@ const sendEmail = async (to, subject, html) => {
       subject,
       html,
     };
-    const info = await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
     console.log("email sent");
-    return info;
   } catch (error) {
     console.error("error sending email", error);
     throw error;
   }
 };
 
-const sendWelcomeEmail = async (username, email) => {
+const sendPatientWelcomeEmail = async (username, email) => {
   const subject = "welcome to my app";
-  const html = welcomeEmailTemplate(username);
+  const html = welcomePatientEmailTemplate(username);
+  return sendEmail(email, subject, html);
+};
+const sendDoctorWelcomeEmail = async (username, email) => {
+  const subject = "welcome to my app";
+  const html = welcomeDoctorEmailTemplate(username);
   return sendEmail(email, subject, html);
 };
 const sendResetEmail = async (email, username, resetToken) => {
@@ -39,6 +44,7 @@ const sendResetEmail = async (email, username, resetToken) => {
 
 module.exports = {
   // sendEmail,
-  sendWelcomeEmail,
+  sendPatientWelcomeEmail,
+  sendDoctorWelcomeEmail,
   sendResetEmail,
 };

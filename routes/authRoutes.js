@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const authController = require("../controllers/authController");
+const timeSlotController = require("../controllers/timeSlotController");
 const {
   validate,
   validateFiles,
@@ -43,6 +44,11 @@ router.post(
     "medicalLicense",
     "profilePicture",
   ]),
+  (req, res, next) => {
+    // Debug middleware - log what was received
+    console.log("send body:", req.body);
+    next();
+  },
   authController.registerDoctor
 );
 
