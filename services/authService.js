@@ -317,6 +317,12 @@ exports.loginService = async (email, password) => {
       throw err;
     }
 
+    if (user.isDeleted) {
+      const err = new Error("Your account has been disabled");
+      err.statusCode = 403;
+      throw err;
+    }
+
     // Check account status
     if (user.status === "pending") {
       const err = new Error("Your account is pending approval.");

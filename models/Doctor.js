@@ -116,4 +116,24 @@ doctorSchema.virtual("fullName").get(function () {
   return `Dr. ${this.firstName} ${this.lastName}`;
 });
 
+// INDEXES for search and filtering performance
+// Text search index (for name, bio, specialization)
+doctorSchema.index({
+  firstName: "text",
+  lastName: "text",
+  bio: "text",
+  specialization: "text",
+  otherSpecialization: "text",
+});
+
+// Filter indexes
+doctorSchema.index({ specialization: 1 });
+doctorSchema.index({ ratePerSession: 1 });
+doctorSchema.index({ clinicAddress: 1 });
+doctorSchema.index({ userId: 1 }); // For joining with User
+
+// Compound indexes for common filter combinations
+doctorSchema.index({ specialization: 1, ratePerSession: 1 });
+doctorSchema.index({ clinicAddress: 1, specialization: 1 });
+
 module.exports = mongoose.model("Doctor", doctorSchema);
