@@ -8,20 +8,29 @@ const {
   submitNewPassword,
 } = require("../services/authService");
 
+const timeSlotService = require("../services/timeSlotService");
+
 // @desc    Register Doctor
 // @route   POST /api/auth/register/doctor
 // @access  Public
 exports.registerDoctor = async (req, res) => {
   try {
     const data = req.validatedData || req.body;
+    console.log(data.slots);
 
     const result = await registerDoctorService(data, req.files);
+    console.log(data);
 
-    res.status(201).json({
+    console.log(data.slots);
+    // Attempt to create time slots if provided in the request body
+
+    const responsePayload = {
       success: true,
       message: "Doctor registration successful. Waiting for admin approval.",
       data: result.user,
-    });
+    };
+
+    res.status(201).json(responsePayload);
   } catch (error) {
     console.error("Doctor registration error:", error);
     res.status(500).json({

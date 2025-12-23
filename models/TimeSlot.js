@@ -1,10 +1,14 @@
+const mongoose = require("mongoose");
+
 const timeSlotSchema = new mongoose.Schema(
   {
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",
       required: true,
+      index: true,
     },
+
     dayOfWeek: {
       type: String,
       enum: [
@@ -17,27 +21,34 @@ const timeSlotSchema = new mongoose.Schema(
         "sunday",
       ],
       required: true,
+      lowercase: true,
     },
+
     startTime: {
-      type: String,
+      type: String, // "16:00"
       required: true,
+      match: /^([01]\d|2[0-3]):([0-5]\d)$/,
     },
+
     endTime: {
-      type: String,
+      type: String, // "16:20"
       required: true,
+      match: /^([01]\d|2[0-3]):([0-5]\d)$/,
     },
-    slotDuration: {
-      type: Number,
-      default: 30,
-    },
-    maxAppointmentsPerSlot: {
-      type: Number,
-      default: 1,
+
+    status: {
+      type: String,
+      enum: ["available", "booked", "cancelled"],
+      default: "available",
+      index: true,
     },
   },
   { timestamps: true }
 );
 
-timeSlotSchema.index({ doctorId: 1, dayOfWeek: 1 });
+timeSlotSchema.index(
+  { doctorId: 1, dayOfWeek: 1, startTime: 1, endTime: 1 },
+  { unique: true }
+);
 
 module.exports = mongoose.model("TimeSlot", timeSlotSchema);

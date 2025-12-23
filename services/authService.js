@@ -13,9 +13,12 @@ const {
   verifyRefreshToken,
 } = require("../utils/Tokens");
 const {
-  sendWelcomeEmail,
+  sendPatientWelcomeEmail,
+  sendDoctorWelcomeEmail,
   sendResetEmail,
 } = require("../services/emailService");
+
+const { createDoctorTimeSlots } = require("./timeSlotService");
 
 // Helper function to persist files from buffer to disk
 const persistFileFromBuffer = async (fileBuffer, fieldName) => {
@@ -76,6 +79,7 @@ exports.registerDoctorService = async (data, files) => {
       clinicAddress,
       bio,
       ratePerSession,
+      slots,
     } = data;
 
     // Check required files
@@ -129,6 +133,7 @@ exports.registerDoctorService = async (data, files) => {
       gender,
       yearsOfExperience: Number(yearsOfExperience),
       specialization,
+      otherSpecialization: otherSpecialization || "",
       clinicAddress: clinicAddress,
       medicalLicense: savedFiles.medicalLicense,
       phdCertificate: savedFiles.phdCertificate,
@@ -149,7 +154,8 @@ exports.registerDoctorService = async (data, files) => {
     // user.refreshToken = refreshToken;
     await user.save();
     await doctor.save();
-    await sendWelcomeEmail(doctor.fullName, user.email);
+    await createDoctorTimeSlots(doctor._id, slots);
+    await sendDoctorWelcomeEmail(doctor.fullName, user.email);
 
     return {
       user: {
@@ -161,8 +167,6 @@ exports.registerDoctorService = async (data, files) => {
         lastName: doctor.lastName,
         role: user.role,
       },
-      //   accessToken,
-      //   refreshToken,
     };
   } catch (error) {
     // Cleanup saved files on error
@@ -262,7 +266,7 @@ exports.registerPatientService = async (data, file) => {
     user.refreshToken = refreshToken;
     await user.save();
     await patient.save();
-    await sendWelcomeEmail(patient.fullName, user.email);
+    await sendPatientWelcomeEmail(patient.fullName, user.email);
 
     return {
       user: {

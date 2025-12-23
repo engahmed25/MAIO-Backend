@@ -1,4 +1,4 @@
-exports.welcomeEmailTemplate = (username) => {
+exports.welcomeDoctorEmailTemplate = (username) => {
   return `
     <!DOCTYPE html>
     <html>
@@ -8,7 +8,6 @@ exports.welcomeEmailTemplate = (username) => {
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
         .content { background: #f9fafb; padding: 30px; border-radius: 0 0 5px 5px; }
-        .button { display: inline-block; padding: 12px 24px; background: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
         .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
       </style>
     </head>
@@ -19,16 +18,54 @@ exports.welcomeEmailTemplate = (username) => {
         </div>
         <div class="content">
           <h2>Hello ${username}!</h2>
-          <p>Thank you for joining our community. We're excited to have you on board!</p>
-          <p>You can now start:</p>
+          <p>We’re excited to have you join MAIO as a healthcare professional.</p>
+          <p>You can now:</p>
           <ul>
-            <li>Making appointments</li>
-            <li>Viewing doctor profiles</li>
-            <li>Seeing doctor availability</li>
-            <li>Uploading Your documents</li>
-            <li>Make Your All Doctors To talk to each other</li>
+            <li>Manage your availability</li>
+            <li>Receive and manage appointments</li>
+            <li>Communicate with patients</li>
+            <li>Upload and review medical documents</li>
+            <li>Collaborate with other doctors</li>
           </ul>
-          <p>If you have any questions, feel free to reach out to our support team.</p>
+          <p>If you need any help, our support team is always here for you.</p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} MAIO. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+exports.welcomePatientEmailTemplate = (username) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #4F46E5; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 5px 5px; }
+        .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Welcome to MAIO</h1>
+        </div>
+        <div class="content">
+          <h2>Hello ${username}!</h2>
+          <p>Thank you for joining MAIO. We're happy to support your healthcare journey.</p>
+          <p>You can now:</p>
+          <ul>
+            <li>Book medical appointments</li>
+            <li>View doctor profiles and availability</li>
+            <li>Upload and manage your medical documents</li>
+            <li>Communicate with your doctors</li>
+          </ul>
+          <p>If you have any questions, feel free to contact our support team.</p>
         </div>
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} MAIO. All rights reserved.</p>
