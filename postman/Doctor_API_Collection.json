@@ -1,0 +1,846 @@
+{
+	"info": {
+		"_postman_id": "doctor-api-collection-001",
+		"name": "Doctor API Collection",
+		"description": "Complete API collection for Doctor Profile Management and Doctor Search features",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Doctor Profile",
+			"item": [
+				{
+					"name": "Get Own Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success property\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Response has data with profile fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('firstName');",
+									"    pm.expect(jsonData.data).to.have.property('lastName');",
+									"    pm.expect(jsonData.data).to.have.property('specialization');",
+									"});",
+									"",
+									"// Save doctorId for other requests",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('doctorId', jsonData.data._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"me"
+							]
+						},
+						"description": "Get the authenticated doctor's own profile. Requires doctor role."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Doctor by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success property\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Response has data with profile\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('_id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/{{doctorId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"{{doctorId}}"
+							]
+						},
+						"description": "Get a doctor profile by ID. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success property\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Profile updated successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message).to.include('updated');",
+									"});",
+									"",
+									"pm.test(\"Updated data is returned\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('firstName');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Ahmed\",\n    \"lastName\": \"Mohamed\",\n    \"bio\": \"Experienced cardiologist with 15 years of practice. Specialized in heart disease treatment and prevention.\",\n    \"ratePerSession\": 250,\n    \"clinicAddress\": \"123 Medical Street, Cairo, Egypt\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"me"
+							]
+						},
+						"description": "Update doctor profile. Only allowed fields can be updated. Verification documents must be uploaded separately."
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Verification Documents",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success property\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Status change notification present\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('pending');",
+									"});",
+									"",
+									"pm.test(\"Documents uploaded successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('phdCertificate');",
+									"});",
+									"",
+									"// Save status for verification",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('userStatus', jsonData.data.status);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "phdCertificate",
+									"type": "file",
+									"src": [],
+									"description": "PDF or DOC file (max 5MB)"
+								},
+								{
+									"key": "medicalLicense",
+									"type": "file",
+									"src": [],
+									"description": "PDF or DOC file (max 5MB)"
+								},
+								{
+									"key": "idProof",
+									"type": "file",
+									"src": [],
+									"description": "JPG, PNG, or PDF file (max 5MB)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/me/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"me",
+								"documents"
+							]
+						},
+						"description": "Upload verification documents (phdCertificate, medicalLicense, idProof). At least one file is required. This will change user status to 'pending' for re-verification."
+					},
+					"response": []
+				}
+			],
+			"description": "Doctor Profile Management endpoints"
+		},
+		{
+			"name": "Doctor Search",
+			"item": [
+				{
+					"name": "Search - No Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success property\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Response has data with doctors array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('doctors');",
+									"    pm.expect(jsonData.data.doctors).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Response has pagination metadata\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('pagination');",
+									"    pm.expect(jsonData.data.pagination).to.have.property('page');",
+									"    pm.expect(jsonData.data.pagination).to.have.property('limit');",
+									"    pm.expect(jsonData.data.pagination).to.have.property('total');",
+									"    pm.expect(jsonData.data.pagination).to.have.property('pages');",
+									"});",
+									"",
+									"pm.test(\"Pagination values are valid\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var pagination = jsonData.data.pagination;",
+									"    pm.expect(pagination.page).to.be.at.least(1);",
+									"    pm.expect(pagination.limit).to.be.at.least(1);",
+									"    pm.expect(pagination.total).to.be.at.least(0);",
+									"    pm.expect(pagination.pages).to.be.at.least(0);",
+									"});",
+									"",
+									"pm.test(\"All doctors have required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.doctors.length > 0) {",
+									"        var doctor = jsonData.data.doctors[0];",
+									"        pm.expect(doctor).to.have.property('_id');",
+									"        pm.expect(doctor).to.have.property('firstName');",
+									"        pm.expect(doctor).to.have.property('specialization');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							]
+						},
+						"description": "Search all approved doctors without any filters. Returns paginated results."
+					},
+					"response": []
+				},
+				{
+					"name": "Search - Text Query",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response structure is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.have.property('doctors');",
+									"    pm.expect(jsonData.data).to.have.property('pagination');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search?q=cardiology",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "cardiology",
+									"description": "Text search query"
+								}
+							]
+						},
+						"description": "Search doctors using text query. Searches across name, bio, and specialization fields."
+					},
+					"response": []
+				},
+				{
+					"name": "Search - Filter by Specialization",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All results match specialization filter\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var doctors = jsonData.data.doctors;",
+									"    doctors.forEach(function(doctor) {",
+									"        pm.expect(doctor.specialization).to.eql('Cardiology');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search?specialization=Cardiology",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "specialization",
+									"value": "Cardiology",
+									"description": "Exact specialization match"
+								}
+							]
+						},
+						"description": "Filter doctors by specialization. Must match exact enum value."
+					},
+					"response": []
+				},
+				{
+					"name": "Search - Filter by Location",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All results contain location in address\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var doctors = jsonData.data.doctors;",
+									"    doctors.forEach(function(doctor) {",
+									"        pm.expect(doctor.clinicAddress.toLowerCase()).to.include('cairo');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search?location=Cairo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "location",
+									"value": "Cairo",
+									"description": "Partial location match (case-insensitive)"
+								}
+							]
+						},
+						"description": "Filter doctors by location. Performs partial match on clinicAddress field."
+					},
+					"response": []
+				},
+				{
+					"name": "Search - Filter by Price Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All results within price range\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var doctors = jsonData.data.doctors;",
+									"    doctors.forEach(function(doctor) {",
+									"        pm.expect(doctor.ratePerSession).to.be.at.least(100);",
+									"        pm.expect(doctor.ratePerSession).to.be.at.most(300);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search?minPrice=100&maxPrice=300",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "minPrice",
+									"value": "100",
+									"description": "Minimum rate per session"
+								},
+								{
+									"key": "maxPrice",
+									"value": "300",
+									"description": "Maximum rate per session"
+								}
+							]
+						},
+						"description": "Filter doctors by price range (minPrice and maxPrice)."
+					},
+					"response": []
+				},
+				{
+					"name": "Search - Combined Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Results match all filters\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var doctors = jsonData.data.doctors;",
+									"    doctors.forEach(function(doctor) {",
+									"        pm.expect(doctor.specialization).to.eql('Cardiology');",
+									"        pm.expect(doctor.clinicAddress.toLowerCase()).to.include('cairo');",
+									"        pm.expect(doctor.ratePerSession).to.be.at.least(100);",
+									"        pm.expect(doctor.ratePerSession).to.be.at.most(300);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search?specialization=Cardiology&location=Cairo&minPrice=100&maxPrice=300",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "specialization",
+									"value": "Cardiology"
+								},
+								{
+									"key": "location",
+									"value": "Cairo"
+								},
+								{
+									"key": "minPrice",
+									"value": "100"
+								},
+								{
+									"key": "maxPrice",
+									"value": "300"
+								}
+							]
+						},
+						"description": "Search with multiple filters combined (specialization, location, and price range)."
+					},
+					"response": []
+				},
+				{
+					"name": "Search - Pagination",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Pagination metadata is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var pagination = jsonData.data.pagination;",
+									"    pm.expect(pagination.page).to.eql(2);",
+									"    pm.expect(pagination.limit).to.eql(5);",
+									"});",
+									"",
+									"pm.test(\"Results count matches limit\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var doctors = jsonData.data.doctors;",
+									"    pm.expect(doctors.length).to.be.at.most(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search?page=2&limit=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "5",
+									"description": "Results per page (default: 10, max: 50)"
+								}
+							]
+						},
+						"description": "Test pagination with custom page and limit values."
+					},
+					"response": []
+				},
+				{
+					"name": "Search - Sorting",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Results are sorted by rating descending\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var doctors = jsonData.data.doctors;",
+									"    if (doctors.length > 1) {",
+									"        for (var i = 0; i < doctors.length - 1; i++) {",
+									"            pm.expect(doctors[i].rating).to.be.at.least(doctors[i+1].rating);",
+									"        }",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search?sortBy=rating&sortOrder=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "sortBy",
+									"value": "rating",
+									"description": "Sort field: rating, ratePerSession, yearsOfExperience, totalReviews"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"description": "Sort order: asc or desc (default: desc)"
+								}
+							]
+						},
+						"description": "Search with sorting by rating in descending order."
+					},
+					"response": []
+				},
+				{
+					"name": "Search - Invalid Parameters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 for invalid params\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error response structure\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.eql(false);",
+									"    pm.expect(jsonData).to.have.property('errors');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/doctors/search?specialization=InvalidSpecialty&page=-1&limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "specialization",
+									"value": "InvalidSpecialty",
+									"description": "Invalid specialization value"
+								},
+								{
+									"key": "page",
+									"value": "-1",
+									"description": "Invalid page number"
+								},
+								{
+									"key": "limit",
+									"value": "100",
+									"description": "Limit exceeds maximum (50)"
+								}
+							]
+						},
+						"description": "Test validation errors for invalid query parameters."
+					},
+					"response": []
+				}
+			],
+			"description": "Doctor Search endpoints with filters, pagination, and sorting"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:9000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "doctorId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+
