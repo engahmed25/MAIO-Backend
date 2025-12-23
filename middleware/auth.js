@@ -21,14 +21,22 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 
     const decoded = verifyAccessToken(token);
-    req.user = await User.findById(decoded.id).select(
-      "-password -refreshToken"
-    );
+    req.user = await User.findById(decoded.id).select({
+      password: 0,
+      refreshToken: 0,
+    });
 
     if (!req.user) {
       return res.status(401).json({
         success: false,
         message: "User not found",
+      });
+    }
+
+    if (req.user.isDeleted) {
+      return res.status(403).json({
+        success: false,
+        message: "Account is disabled",
       });
     }
 
@@ -43,4 +51,26 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { protect };
+// @desc    Authorize user by role
+// @access  Private
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized, user not authenticated",
+      });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. Required role: ${roles.join(" or ")}`,
+      });
+    }
+
+    next();
+  };
+};
+
+module.exports = { protect, authorize };

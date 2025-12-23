@@ -155,8 +155,41 @@ const loginSchema = Joi.object({
   }),
 });
 
+// ADMIN REGISTRATION VALIDATION
+const adminRegistrationSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please provide a valid email address",
+    "any.required": "Email is required",
+  }),
+  password: Joi.string().min(6).required().messages({
+    "string.min": "Password must be at least 6 characters",
+    "any.required": "Password is required",
+  }),
+  firstName: Joi.string().min(2).max(50).required().messages({
+    "any.required": "First name is required",
+  }),
+  lastName: Joi.string().min(2).max(50).required().messages({
+    "any.required": "Last name is required",
+  }),
+  phoneNumber: Joi.string()
+    .pattern(/^[0-9]{10,15}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "Phone number must be 10-15 digits",
+    }),
+});
+
+const statusUpdateSchema = Joi.object({
+  status: Joi.string().valid("pending", "approved").required().messages({
+    "any.only": "Status must be pending or approved",
+    "any.required": "Status is required",
+  }),
+});
+
 module.exports = {
   doctorRegistrationSchema,
   patientRegistrationSchema,
   loginSchema,
+  adminRegistrationSchema,
+  statusUpdateSchema,
 };
