@@ -1,0 +1,32 @@
+{
+	"id": "doctor-api-env-001",
+	"name": "Doctor API Environment",
+	"values": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:9000",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "doctorId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "userStatus",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment"
+}
+
