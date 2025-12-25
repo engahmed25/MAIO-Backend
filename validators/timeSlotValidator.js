@@ -80,3 +80,55 @@ exports.validateSlots = (slots) => {
     }
   });
 };
+
+exports.validateAggregatedSlots = (slots) => {
+  if (!Array.isArray(slots) || slots.length === 0) {
+    const err = new Error("Slots must be a non-empty array");
+    err.status = 400;
+    throw err;
+  }
+
+  slots.forEach((slot, index) => {
+    const { day, start, end, maxPersonsPerSlot } = slot;
+
+    if (!day || !start || !end || maxPersonsPerSlot === undefined) {
+      const err = new Error(
+        `Slot ${index + 1}: day, start, end, and maxPersonsPerSlot are required`
+      );
+      err.status = 400;
+      throw err;
+    }
+
+    const normalizedDay = day.toLowerCase();
+    if (!allowedDays.includes(normalizedDay)) {
+      const err = new Error(`Slot ${index + 1}: invalid day "${day}"`);
+      err.status = 400;
+      throw err;
+    }
+
+    if (!isValidTime(start) || !isValidTime(end)) {
+      const err = new Error(`Slot ${index + 1}: invalid time format (HH:mm)`);
+      err.status = 400;
+      throw err;
+    }
+
+    const startMinutes = toMinutes(start);
+    const endMinutes = toMinutes(end);
+
+    if (startMinutes >= endMinutes) {
+      const err = new Error(
+        `Slot ${index + 1}: start time must be before end time`
+      );
+      err.status = 400;
+      throw err;
+    }
+
+    if (!Number.isInteger(maxPersonsPerSlot) || maxPersonsPerSlot <= 0) {
+      const err = new Error(
+        `Slot ${index + 1}: maxPersonsPerSlot must be a positive integer`
+      );
+      err.status = 400;
+      throw err;
+    }
+  });
+};
