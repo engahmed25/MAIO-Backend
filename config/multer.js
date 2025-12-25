@@ -22,6 +22,8 @@ const storage = multer.diskStorage({
       folder += "IDProof/";
     } else if (file.fieldname === "profilePicture") {
       folder += "ProfilePicture/";
+    } else if (file.fieldname === "medicalDocument") {
+      folder += "MedicalDocuments/";
     }
 
     // Create folder if it doesn't exist
@@ -49,6 +51,7 @@ const fileFilter = (req, file, cb) => {
     medicalLicense: /pdf|doc|docx/,
     idProof: /jpg|jpeg|png/,
     profilePicture: /jpg|jpeg|png/,
+    medicalDocument: /pdf|doc|docx|jpg|jpeg|png/,
   };
 
   const extname = path

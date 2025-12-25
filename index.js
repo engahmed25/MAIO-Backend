@@ -12,6 +12,7 @@ const connectDB = require("./config/db");
 const authRouter = require("./routes/authRoutes");
 const doctorRouter = require("./routes/doctor.routes");
 const adminRouter = require("./routes/adminRoutes");
+const patientRouter = require("./routes/patientRoutes");
 
 // Middleware
 app.use(cors());
@@ -28,6 +29,7 @@ connectDB();
 app.use("/api/auth", authRouter);
 app.use("/api/doctors", doctorRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/patients", patientRouter);
 
 // Health check route
 app.get("/health", (req, res) => {

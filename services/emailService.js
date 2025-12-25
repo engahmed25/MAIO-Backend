@@ -42,9 +42,21 @@ const sendResetEmail = async (email, username, resetToken) => {
   return sendEmail(email, subject, html);
 };
 
+const sendContactVerificationEmail = async (email, code) => {
+  const subject = "Confirm your contact update";
+  const html = `
+    <p>We received a request to update the contact information for your account.</p>
+    <p>Use the verification code below to confirm this change:</p>
+    <h2>${code}</h2>
+    <p>If you did not request this change, please ignore this email.</p>
+  `;
+  return sendEmail(email, subject, html);
+};
+
 module.exports = {
-  // sendEmail,
+  sendEmail,
   sendPatientWelcomeEmail,
   sendDoctorWelcomeEmail,
   sendResetEmail,
+  sendContactVerificationEmail,
 };

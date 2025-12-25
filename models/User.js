@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema(
       minlength: [6, "Password must be at least 6 characters"],
       select: false, // Don't return password in queries by default
     },
+    phoneNumber: {
+      type: String,
+      match: [/^[0-9]{10,15}$/, "Phone number must be 10-15 digits"],
+    },
     role: {
       type: String,
       enum: {
@@ -47,6 +51,23 @@ const userSchema = new mongoose.Schema(
     },
     refreshToken: {
       type: String,
+      select: false,
+    },
+    pendingEmail: {
+      type: String,
+      lowercase: true,
+      trim: true,
+    },
+    pendingPhoneNumber: {
+      type: String,
+      match: [/^[0-9]{10,15}$/, "Phone number must be 10-15 digits"],
+    },
+    contactVerificationCode: {
+      type: String,
+      select: false,
+    },
+    contactVerificationExpires: {
+      type: Date,
       select: false,
     },
     resetToken: {

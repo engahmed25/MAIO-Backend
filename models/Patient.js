@@ -87,6 +87,42 @@ const patientSchema = new mongoose.Schema(
       },
       required: [true, "Smoking status is required"],
     },
+    medicalHistory: {
+      chronicDiseases: {
+        type: [String],
+        default: [],
+      },
+      allergies: {
+        type: [String],
+        default: [],
+      },
+      notes: {
+        type: String,
+        trim: true,
+      },
+    },
+    medicalDocuments: {
+      type: [
+        {
+          title: {
+            type: String,
+            required: [true, "Document title is required"],
+          },
+          filePath: {
+            type: String,
+            required: [true, "Document path is required"],
+          },
+          fileType: {
+            type: String,
+          },
+          uploadedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      default: [],
+    },
     assignedDoctors: [
       {
         type: mongoose.Schema.Types.ObjectId,
