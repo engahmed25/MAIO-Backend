@@ -18,6 +18,7 @@ const {
 const upload = require("../config/multer");
 
 const User = require("../models/User");
+const parseFormDataArrays = require("../middleware/parseFormDataArrays");
 
 const { protect } = require("../middleware/auth");
 // Registration Routes
@@ -63,6 +64,7 @@ router.post(
     console.log("File keys:", req.files ? Object.keys(req.files) : "no files");
     next();
   },
+  parseFormDataArrays(["illnesses"]),
   validate(patientRegistrationSchema),
   checkEmailExists(User),
   validateFiles(["profilePicture"]),

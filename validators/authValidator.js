@@ -126,6 +126,7 @@ const patientRegistrationSchema = Joi.object({
   }),
 
   drugAllergies: Joi.string().allow("").optional(),
+  
 
   illnesses: Joi.array().items(Joi.string()).optional(),
 
