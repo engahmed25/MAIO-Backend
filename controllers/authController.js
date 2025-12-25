@@ -8,7 +8,7 @@ const {
   submitNewPassword,
 } = require("../services/authService");
 
-const timeSlotService = require("../services/timeSlotService");
+const timeSlotService = require("../services/doctorSchedule.service");
 
 // @desc    Register Doctor
 // @route   POST /api/auth/register/doctor

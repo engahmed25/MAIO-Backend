@@ -1,4 +1,4 @@
-const timeSlotService = require("../services/timeSlotService");
+const timeSlotService = require("../services/doctorSchedule.service");
 
 exports.createTimeSlots = async (req, res, next) => {
   try {
@@ -10,10 +10,15 @@ exports.createTimeSlots = async (req, res, next) => {
     const { slots } = req.body || {};
 
     if (!slots) {
-      return res.status(400).json({ success: false, message: "Slots are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Slots are required" });
     }
 
-    const createdSlots = await timeSlotService.createDoctorTimeSlots(doctorId, slots);
+    const createdSlots = await timeSlotService.createDoctorTimeSlots(
+      doctorId,
+      slots
+    );
     res.status(201).json({
       success: true,
       message: "Time slots created successfully",

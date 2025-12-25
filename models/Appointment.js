@@ -5,42 +5,64 @@ const appointmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Patient",
       required: true,
+      index: true,
     },
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",
       required: true,
+      index: true,
     },
     appointmentDate: {
       type: Date,
       required: true,
+      index: true,
     },
-    timeSlot: {
-      startTime: { type: String, required: true }, // "09:00"
-      endTime: { type: String, required: true }, // "09:30"
+    // These MUST match a generated slot exactly
+    startTime: {
+      type: String, // "19:00"
+      required: true,
+    },
+
+    endTime: {
+      type: String, // "19:30"
+      required: true,
     },
     status: {
       type: String,
       enum: ["scheduled", "confirmed", "cancelled", "completed", "no-show"],
       default: "scheduled",
+      index: true,
     },
     reasonForVisit: {
       type: String,
       required: true,
     },
-    notes: String,
-    prescription: String,
+    notes: {
+      type: String,
+      trim: true,
+    },
     cancelledBy: {
       type: String,
       enum: ["patient", "doctor", "admin"],
     },
-    cancellationReason: String,
+    cancellationReason: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );
 
 // Index for efficient queries
-appointmentSchema.index({ doctorId: 1, appointmentDate: 1 });
-appointmentSchema.index({ patientId: 1, appointmentDate: 1 });
+appointmentSchema.index(
+  {
+    doctorId: 1,
+    appointmentDate: 1,
+    startTime: 1,
+    endTime: 1,
+  },
+  { unique: true }
+);
 
 module.exports = mongoose.model("Appointment", appointmentSchema);
