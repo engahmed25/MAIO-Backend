@@ -13,6 +13,9 @@ const authRouter = require("./routes/authRoutes");
 const doctorRouter = require("./routes/doctor.routes");
 const adminRouter = require("./routes/adminRoutes");
 const patientRouter = require("./routes/patientRoutes");
+const availabilityRouter = require("./routes/availability.routes");
+const appointmentRouter = require("./routes/appointment.routes");
+const reservationRouter = require("./routes/reservation.routes");
 
 // Middleware
 app.use(cors());
@@ -30,6 +33,11 @@ app.use("/api/auth", authRouter);
 app.use("/api/doctors", doctorRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/patients", patientRouter);
+// Mount availability under /api so route paths like
+// GET /api/doctors/:doctorId/availability work as expected
+app.use("/api", availabilityRouter);
+app.use("/api/appointments", appointmentRouter);
+app.use("/api/reservations", reservationRouter);
 
 // Health check route
 app.get("/health", (req, res) => {

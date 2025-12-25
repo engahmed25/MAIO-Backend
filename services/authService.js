@@ -18,7 +18,7 @@ const {
   sendResetEmail,
 } = require("../services/emailService");
 
-const { createDoctorTimeSlots } = require("./timeSlotService");
+const { createDoctorSchedule } = require("./doctorSchedule.service");
 
 // Helper function to persist files from buffer to disk
 const persistFileFromBuffer = async (fileBuffer, fieldName) => {
@@ -154,7 +154,7 @@ exports.registerDoctorService = async (data, files) => {
     // user.refreshToken = refreshToken;
     await user.save();
     await doctor.save();
-    await createDoctorTimeSlots(doctor._id, slots);
+    await createDoctorSchedule(doctor._id, slots);
     await sendDoctorWelcomeEmail(doctor.fullName, user.email);
 
     return {
