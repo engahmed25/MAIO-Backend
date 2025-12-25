@@ -1,0 +1,183 @@
+[
+  {
+    "mount": "/api/auth",
+    "varname": "authRouter",
+    "reqPath": "./routes/authRoutes",
+    "resolved": "E:\\mina\\NTI Open Source\\Final Project\\Final Backend MAIO\\MAIO-Backend\\routes\\authRoutes.js",
+    "exists": true,
+    "routers": [
+      {
+        "method": "post",
+        "pathArg": "\"/register/admin\"",
+        "handler": "authController.registerAdmin",
+        "check": {
+          "handler": "authController.registerAdmin",
+          "ok": false,
+          "reason": "function registerAdmin not obviously exported in E:\\mina\\NTI Open Source\\Final Project\\Final Backend MAIO\\MAIO-Backend\\controllers\\authController.js"
+        }
+      },
+      {
+        "method": "post",
+        "pathArg": "\"/refresh\"",
+        "handler": "authController.refreshToken",
+        "check": {
+          "handler": "authController.refreshToken",
+          "ok": true,
+          "reason": ""
+        }
+      },
+      {
+        "method": "post",
+        "pathArg": "\"/logout\"",
+        "handler": "authController.logout",
+        "check": {
+          "handler": "authController.logout",
+          "ok": true,
+          "reason": ""
+        }
+      },
+      {
+        "method": "get",
+        "pathArg": "\"/reset\"",
+        "handler": "authController.requestResetPassword",
+        "check": {
+          "handler": "authController.requestResetPassword",
+          "ok": true,
+          "reason": ""
+        }
+      },
+      {
+        "method": "post",
+        "pathArg": "\"/reset\"",
+        "handler": "authController.submitNewPassword",
+        "check": {
+          "handler": "authController.submitNewPassword",
+          "ok": true,
+          "reason": ""
+        }
+      }
+    ]
+  },
+  {
+    "mount": "/api/doctors",
+    "varname": "doctorRouter",
+    "reqPath": "./routes/doctor.routes",
+    "resolved": "E:\\mina\\NTI Open Source\\Final Project\\Final Backend MAIO\\MAIO-Backend\\routes\\doctor.routes.js",
+    "exists": true,
+    "routers": [
+      {
+        "method": "get",
+        "pathArg": "\"/search\"",
+        "handler": "doctorSearchController.searchDoctors",
+        "check": {
+          "handler": "doctorSearchController.searchDoctors",
+          "ok": true,
+          "reason": ""
+        }
+      },
+      {
+        "method": "get",
+        "pathArg": "\"/me\"",
+        "handler": "doctorController.getMyProfile",
+        "check": {
+          "handler": "doctorController.getMyProfile",
+          "ok": true,
+          "reason": ""
+        }
+      },
+      {
+        "method": "get",
+        "pathArg": "\"/:doctorId\"",
+        "handler": "doctorController.getDoctorProfile",
+        "check": {
+          "handler": "doctorController.getDoctorProfile",
+          "ok": true,
+          "reason": ""
+        }
+      }
+    ]
+  },
+  {
+    "mount": "/api/admin",
+    "varname": "adminRouter",
+    "reqPath": "./routes/adminRoutes",
+    "resolved": "E:\\mina\\NTI Open Source\\Final Project\\Final Backend MAIO\\MAIO-Backend\\routes\\adminRoutes.js",
+    "exists": true,
+    "routers": [
+      {
+        "method": "post",
+        "pathArg": "\"/register\"",
+        "handler": "registerAdmin",
+        "check": {
+          "handler": "registerAdmin",
+          "ok": true,
+          "reason": ""
+        }
+      },
+      {
+        "method": "post",
+        "pathArg": "\"/login\"",
+        "handler": "login",
+        "check": {
+          "handler": "login",
+          "ok": true,
+          "reason": ""
+        }
+      }
+    ]
+  },
+  {
+    "mount": "/api/patients",
+    "varname": "patientRouter",
+    "reqPath": "./routes/patientRoutes",
+    "resolved": "E:\\mina\\NTI Open Source\\Final Project\\Final Backend MAIO\\MAIO-Backend\\routes\\patientRoutes.js",
+    "exists": true,
+    "routers": [
+      {
+        "method": "get",
+        "pathArg": "\"/:patientId/public\"",
+        "handler": "patientController.getPublicProfile",
+        "check": {
+          "handler": "patientController.getPublicProfile",
+          "ok": true,
+          "reason": ""
+        }
+      }
+    ]
+  },
+  {
+    "mount": "/api",
+    "varname": "availabilityRouter",
+    "reqPath": "./routes/availability.routes",
+    "resolved": "E:\\mina\\NTI Open Source\\Final Project\\Final Backend MAIO\\MAIO-Backend\\routes\\availability.routes.js",
+    "exists": true,
+    "routers": []
+  },
+  {
+    "mount": "/api/appointments",
+    "varname": "appointmentRouter",
+    "reqPath": "./routes/appointment.routes",
+    "resolved": "E:\\mina\\NTI Open Source\\Final Project\\Final Backend MAIO\\MAIO-Backend\\routes\\appointment.routes.js",
+    "exists": true,
+    "routers": []
+  },
+  {
+    "mount": "/api/reservations",
+    "varname": "reservationRouter",
+    "reqPath": "./routes/reservation.routes",
+    "resolved": "E:\\mina\\NTI Open Source\\Final Project\\Final Backend MAIO\\MAIO-Backend\\routes\\reservation.routes.js",
+    "exists": true,
+    "routers": [
+      {
+        "method": "post",
+        "pathArg": "\"/\"",
+        "handler": "controller.reserveSlot",
+        "check": {
+          "handler": "controller.reserveSlot",
+          "ok": true,
+          "reason": ""
+        }
+      }
+    ]
+  }
+]
