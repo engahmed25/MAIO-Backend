@@ -36,10 +36,33 @@ const userSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: ["pending", "approved"],
-        message: "Status must be pending Or approved",
+        values: ["pending", "approved", "active", "suspended"],
+        message: "Status must be pending, approved, active, or suspended",
       },
       default: "pending",
+    },
+    verificationStatus: {
+      type: String,
+      enum: {
+        values: ["pending", "approved", "rejected"],
+        message:
+          "Verification status must be pending, approved, or rejected",
+      },
+      default: "pending",
+    },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    verifiedAt: {
+      type: Date,
+    },
+    rejectionReason: {
+      type: String,
+      trim: true,
+    },
+    lastLoginAt: {
+      type: Date,
     },
     profilePicture: {
       type: String,
@@ -103,5 +126,11 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
     throw new Error("Password comparison failed");
   }
 };
+
+// Helpful indexes for admin queries and dashboards
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ verificationStatus: 1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ lastLoginAt: -1 });
 
 module.exports = mongoose.model("User", userSchema);

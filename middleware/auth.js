@@ -40,6 +40,20 @@ const protect = asyncHandler(async (req, res, next) => {
       });
     }
 
+    if (req.user.status === "suspended") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is suspended",
+      });
+    }
+
+    if (req.user.status === "pending") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is pending approval",
+      });
+    }
+
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);

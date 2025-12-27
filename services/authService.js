@@ -121,6 +121,7 @@ exports.registerDoctorService = async (data, files) => {
       password,
       role: "doctor",
       status: "pending",
+      verificationStatus: "pending",
       profilePicture: savedFiles.profilePicture || null,
     });
 
@@ -224,6 +225,8 @@ exports.registerPatientService = async (data, file) => {
       password,
       role: "patient",
       status: "approved",
+      verificationStatus: "approved",
+      verifiedAt: new Date(),
       profilePicture: savedFiles.profilePicture || null,
     });
 
@@ -324,10 +327,20 @@ exports.loginService = async (email, password) => {
     }
 
     // Check account status
-    if (user.status === "pending") {
+    const normalizedStatus =
+      user.status === "approved" ? "active" : user.status;
+
+    if (normalizedStatus === "pending") {
       const err = new Error("Your account is pending approval.");
       err.statusCode = 403;
       err.status = "pending";
+      throw err;
+    }
+
+    if (normalizedStatus === "suspended") {
+      const err = new Error("Your account is suspended.");
+      err.statusCode = 403;
+      err.status = "suspended";
       throw err;
     }
 
@@ -353,6 +366,7 @@ exports.loginService = async (email, password) => {
 
     // Save refresh token
     user.refreshToken = refreshToken;
+    user.lastLoginAt = new Date();
     await user.save();
 
     return {
