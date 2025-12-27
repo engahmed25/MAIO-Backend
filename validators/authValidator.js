@@ -181,10 +181,32 @@ const adminRegistrationSchema = Joi.object({
 });
 
 const statusUpdateSchema = Joi.object({
-  status: Joi.string().valid("pending", "approved").required().messages({
-    "any.only": "Status must be pending or approved",
+  status: Joi.string()
+    .valid("pending", "approved", "active", "suspended")
+    .required()
+    .messages({
+      "any.only": "Status must be pending, approved, active, or suspended",
     "any.required": "Status is required",
   }),
+});
+
+const verificationUpdateSchema = Joi.object({
+  verificationStatus: Joi.string()
+    .valid("pending", "approved", "rejected")
+    .required()
+    .messages({
+      "any.only": "Verification status must be pending, approved, or rejected",
+      "any.required": "verificationStatus is required",
+    }),
+  rejectionReason: Joi.string()
+    .max(500)
+    .when("verificationStatus", {
+      is: "rejected",
+      then: Joi.string().min(3).required().messages({
+        "any.required": "Rejection reason is required when rejecting",
+      }),
+      otherwise: Joi.string().allow("", null).optional(),
+    }),
 });
 
 module.exports = {
@@ -193,4 +215,5 @@ module.exports = {
   loginSchema,
   adminRegistrationSchema,
   statusUpdateSchema,
+  verificationUpdateSchema,
 };

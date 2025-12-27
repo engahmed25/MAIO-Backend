@@ -51,7 +51,9 @@ const buildFilterQuery = (filters) => {
 const getApprovedDoctorUserIds = async () => {
     const approvedUsers = await User.find({
         role: "doctor",
-        status: "approved",
+        status: { $in: ["approved", "active"] },
+        isDeleted: { $ne: true },
+        verificationStatus: { $ne: "rejected" },
     }).select("_id");
 
     return approvedUsers.map((user) => user._id);
