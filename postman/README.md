@@ -1,12 +1,78 @@
-# Doctor API - Postman Collection
+# Postman Collections
 
-Complete Postman collection for testing Doctor Profile Management and Doctor Search features.
+Postman resources for the project. Admin endpoints are documented and ready for use alongside the existing Doctor API assets.
 
 ## Files
 
-- **Doctor_API_Collection.json** - Main Postman collection with all requests and tests
-- **Doctor_API_Environment.json** - Environment variables template
-- **MANUAL_TEST_FLOW.md** - Step-by-step manual testing guide
+- **Admin_API_Collection.json** - Single collection for `/api/admin` (auth, dashboard, users, verification/status, soft delete) with tests
+- **Admin_API_Environment.json** - Environment template (`baseUrl`, `token`, `userId`, `pendingUserId`, `adminUserId`)
+- **Admin_API_MANUAL_TEST_FLOW.md** - Step-by-step admin regression and contact verification flow
+- **Doctor_API_Collection.json** - Doctor profile + search collection
+- **Doctor_API_Environment.json** - Doctor environment template
+- **MANUAL_TEST_FLOW.md** - Doctor API manual testing guide
+- Other patient docs remain unchanged (see Patient_*.md files)
+
+---
+
+## Admin API - Quick Start
+
+1. Import `Admin_API_Collection.json` and `Admin_API_Environment.json`.
+2. Set `baseUrl` (e.g., `http://localhost:9000`) and `token` (admin accessToken from `/api/admin/login`).
+3. Follow `Admin_API_MANUAL_TEST_FLOW.md` for the verification/status flow.
+
+### Collection Structure
+```
+Admin API Collection
+├── Auth
+│   ├── Register Admin (POST /api/admin/register)
+│   └── Login Admin (POST /api/admin/login)
+├── Dashboard
+│   └── Get Dashboard Metrics (GET /api/admin/dashboard/metrics)
+├── Users
+│   ├── List Users (filters + pagination)
+│   ├── List Pending Users
+│   └── Get User By ID
+└── Verification & Status
+    ├── Update User Status (approve/activate/suspend)
+    ├── Approve Verification
+    ├── Reject Verification (with reason)
+    └── Soft Delete User
+```
+
+### Key Admin Endpoints
+
+| Method | Endpoint | Description | Sample payload / queries |
+|--------|----------|-------------|--------------------------|
+| POST | `/api/admin/register` | Create admin (approved immediately) | `{ "email": "admin1@example.com", "password": "Admin123", "firstName": "Super", "lastName": "Admin", "phoneNumber": "01012345678" }` |
+| POST | `/api/admin/login` | Admin login, returns access/refresh tokens | `{ "email": "admin1@example.com", "password": "Admin123" }` |
+| GET | `/api/admin/dashboard/metrics` | Totals (users, roles, verification, activity, appointments) | `Authorization: Bearer {{token}}` |
+| GET | `/api/admin/users` | List users with filters, search, sorting, pagination | `?page=1&limit=10&role=doctor&status=approved&verificationStatus=approved&search=john&sortBy=lastLogin&sortOrder=desc&includeDeleted=false` |
+| GET | `/api/admin/users/pending` | Pending accounts (status + verification) | `?page=1&limit=5&role=doctor` |
+| GET | `/api/admin/users/:id` | Single user + profileCompletion | Path: `:id` from list |
+| PATCH | `/api/admin/users/:id/status` | Update status (pending/approved/active/suspended) | `{ "status": "active" }` |
+| PATCH | `/api/admin/users/:id/verification` | Approve/reject verification (saves verifier + reason) | Approve: `{ "verificationStatus": "approved" }`<br>Reject: `{ "verificationStatus": "rejected", "rejectionReason": "Missing ID proof" }` |
+| DELETE | `/api/admin/users/:id` | Soft delete user (sets status suspended) | Path: `:id` |
+
+### Built-in Collection Tests
+- Status code checks on every request.
+- Response shape checks (success flag, pagination on list endpoints, verification metadata).
+- Pagination assertions for list endpoints.
+- Environment setters: `token`, `adminUserId`, `userId`, `pendingUserId`.
+
+### Manual Test Flow (contact verification focus)
+See `Admin_API_MANUAL_TEST_FLOW.md` for a step-by-step guide:
+1. Register/Login admin ➜ token saved.
+2. Pull dashboard metrics for a baseline snapshot.
+3. List users with filters ➜ capture `userId`.
+4. List pending users ➜ capture `pendingUserId`.
+5. Approve verification (`{{userId}}`) and reject another with reason (`{{pendingUserId}}`).
+6. Toggle account status (active/suspended) and soft delete as needed.
+
+---
+
+# Doctor API - Postman Collection
+
+Complete Postman collection for testing Doctor Profile Management and Doctor Search features.
 
 ## Quick Start
 

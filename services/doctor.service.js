@@ -223,7 +223,13 @@ exports.uploadVerificationDocumentsService = async (userId, files) => {
         await doctor.save();
 
         // Update User status to "pending" for re-verification
-        await User.findByIdAndUpdate(userId, { status: "pending" });
+        await User.findByIdAndUpdate(userId, {
+            status: "pending",
+            verificationStatus: "pending",
+            verifiedAt: null,
+            verifiedBy: null,
+            rejectionReason: null,
+        });
 
         // Populate and return updated profile
         const updatedDoctor = await Doctor.findById(doctor._id)
