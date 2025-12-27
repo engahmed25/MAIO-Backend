@@ -9,6 +9,8 @@ const {
   getUser,
   updateStatus,
   softDelete,
+  updateVerification,
+  getMetrics,
 } = require("../controllers/adminController");
 const { protect, authorize } = require("../middleware/auth");
 const { validate } = require("../middleware/validation");
@@ -16,11 +18,20 @@ const {
   adminRegistrationSchema,
   loginSchema,
   statusUpdateSchema,
+  verificationUpdateSchema,
 } = require("../validators/authValidator");
 
 // Admin auth
 router.post("/register", validate(adminRegistrationSchema), registerAdmin);
 router.post("/login", validate(loginSchema), login);
+
+// Dashboard metrics
+router.get(
+  "/dashboard/metrics",
+  protect,
+  authorize("admin"),
+  getMetrics
+);
 
 // Admin-only user management
 router.get(
@@ -47,6 +58,13 @@ router.patch(
   authorize("admin"),
   validate(statusUpdateSchema),
   updateStatus
+);
+router.patch(
+  "/users/:id/verification",
+  protect,
+  authorize("admin"),
+  validate(verificationUpdateSchema),
+  updateVerification
 );
 router.delete(
   "/users/:id",

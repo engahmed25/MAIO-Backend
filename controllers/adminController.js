@@ -5,6 +5,8 @@ const {
   getUserById,
   updateUserStatus,
   softDeleteUser,
+  updateVerificationStatus,
+  getDashboardMetrics,
 } = require("../services/adminService");
 const { loginService } = require("../services/authService");
 
@@ -49,13 +51,26 @@ exports.login = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const { page, limit, role, status, search, includeDeleted } = req.query;
+    const {
+      page,
+      limit,
+      role,
+      status,
+      search,
+      verificationStatus,
+      sortBy,
+      sortOrder,
+      includeDeleted,
+    } = req.query;
     const result = await listUsers({
       page,
       limit,
       role,
       status,
       search,
+      verificationStatus,
+      sortBy,
+      sortOrder,
       includeDeleted: includeDeleted === "true",
     });
     return res.status(200).json({
@@ -81,6 +96,7 @@ exports.getPendingUsers = async (req, res) => {
       limit,
       role,
       status: "pending",
+      verificationStatus: "pending",
       search,
       includeDeleted: includeDeleted === "true",
     });
@@ -119,7 +135,7 @@ exports.getUser = async (req, res) => {
 exports.updateStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const result = await updateUserStatus(req.params.id, status);
+    const result = await updateUserStatus(req.params.id, status, req.user?._id);
     return res.status(200).json({
       success: true,
       message: "Status updated successfully",
@@ -147,6 +163,46 @@ exports.softDelete = async (req, res) => {
     return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message || "Failed to delete user",
+    });
+  }
+};
+
+exports.updateVerification = async (req, res) => {
+  try {
+    const { verificationStatus, rejectionReason } = req.body;
+    const result = await updateVerificationStatus(
+      req.params.id,
+      verificationStatus,
+      req.user?._id,
+      rejectionReason
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Verification status updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Update verification error:", error);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to update verification status",
+    });
+  }
+};
+
+exports.getMetrics = async (req, res) => {
+  try {
+    const data = await getDashboardMetrics();
+    return res.status(200).json({
+      success: true,
+      message: "Dashboard metrics fetched successfully",
+      data,
+    });
+  } catch (error) {
+    console.error("Get dashboard metrics error:", error);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to fetch dashboard metrics",
     });
   }
 };
