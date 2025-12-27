@@ -465,10 +465,19 @@ exports.resetPassword = async (email) => {
 
     await user.save();
 
+    if (user.role === "patient") {
+      const patient = await Patient.findOne({ userId: user._id });
+      await sendResetEmail(user.email, patient.fullName, token);
+    } else if (user.role === "doctor") {
+      const doctor = await Doctor.findOne({ userId: user._id });
+      await sendResetEmail(user.email, doctor.fullName, token);
+    } else {
+      await sendResetEmail(user.email, "Admin", token);
+    }
+
     // TODO: Implement sendResetEmail function
     // For now, return the token (in production, send via email)
     console.log(`Reset token for ${email}: ${token}`);
-    sendResetEmail(user.email, user.fullName, token);
 
     return {
       message: "Reset token generated successfully",
