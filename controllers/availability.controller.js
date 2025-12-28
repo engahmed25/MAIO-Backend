@@ -30,3 +30,21 @@ exports.getDoctorAvailability = async (req, res) => {
     });
   }
 };
+
+exports.getDoctorAvailableDays = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const availability = await availabilityService.getAvailableDays({
+      doctorId,
+    });
+    res.status(200).json({
+      success: true,
+      data: availability,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

@@ -282,35 +282,37 @@ exports.getMedicalRecordsService = async (userId) => {
 
 exports.getPatientMedicalDocumentsService = async (patientId) => {
   const patient = await Patient.findOne({ userId: patientId })
-    .select("medicalDocuments firstName lastName gender age emergencyContactNumber reasonForSeeingDoctor drugAllergies illnesses otherIllness operations currentMedications smoking medicalHistory assignedDoctors")
+    .select(
+      "medicalDocuments firstName lastName gender age emergencyContactNumber reasonForSeeingDoctor drugAllergies illnesses otherIllness operations currentMedications smoking medicalHistory assignedDoctors"
+    )
     .populate("userId", "profilePicture")
     .lean();
-    
-    if (!patient) {
-      throw new Error("Patient profile not found");
-    }
 
-    return {
-      name: `${patient.firstName} ${patient.lastName}`,
-      profilePicture: patient.userId?.profilePicture || null,
-      gender: patient.gender,
-      age: patient.age,
-      emergencyContactNumber: patient.emergencyContactNumber,
-      reasonForSeeingDoctor: patient.reasonForSeeingDoctor,
-      drugAllergies: patient.drugAllergies,
-      illnesses: patient.illnesses,
-      otherIllness: patient.otherIllness,
-      operations: patient.operations,
-      currentMedications: patient.currentMedications,
-      smoking: patient.smoking,
-      medicalHistory: patient.medicalHistory || {
-        chronicDiseases: [],
-        allergies: [],
-        notes: "",
-      },
-      medicalDocuments: patient.medicalDocuments || [],
-      assignedDoctors: patient.assignedDoctors || [],
-    };
+  if (!patient) {
+    throw new Error("Patient profile not found");
+  }
+
+  return {
+    name: `${patient.firstName} ${patient.lastName}`,
+    profilePicture: patient.userId?.profilePicture || null,
+    gender: patient.gender,
+    age: patient.age,
+    emergencyContactNumber: patient.emergencyContactNumber,
+    reasonForSeeingDoctor: patient.reasonForSeeingDoctor,
+    drugAllergies: patient.drugAllergies,
+    illnesses: patient.illnesses,
+    otherIllness: patient.otherIllness,
+    operations: patient.operations,
+    currentMedications: patient.currentMedications,
+    smoking: patient.smoking,
+    medicalHistory: patient.medicalHistory || {
+      chronicDiseases: [],
+      allergies: [],
+      notes: "",
+    },
+    medicalDocuments: patient.medicalDocuments || [],
+    assignedDoctors: patient.assignedDoctors || [],
+  };
 };
 exports.deleteMedicalDocumentService = async (userId, documentId) => {
   if (!mongoose.Types.ObjectId.isValid(documentId)) {
@@ -510,4 +512,17 @@ exports.softDeleteAccountService = async (userId) => {
   user.contactVerificationExpires = null;
 
   await user.save();
+};
+
+exports.getAssignedDoctorService = async (patientId) => {
+  const Doctors = await Patient.findOne({ userId: patientId })
+    .populate(
+      "assignedDoctors",
+      "firstName lastName specialization profilePicture contactInfo"
+    )
+    .lean();
+  if (!Doctors) {
+    throw new Error("Patient profile not found");
+  }
+  return Doctors.assignedDoctors || [];
 };

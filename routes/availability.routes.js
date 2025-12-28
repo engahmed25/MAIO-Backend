@@ -8,4 +8,10 @@ router.get(
   availabilityController.getDoctorAvailability
 );
 
+// GET /api/doctors/:doctorId/availableDays
+router.get(
+  "/doctors/:doctorId/availableDays",
+  availabilityController.getDoctorAvailableDays
+);
+
 module.exports = router;

@@ -2,7 +2,8 @@ const reservationService = require("../services/reservation.service");
 
 exports.reserveSlot = async (req, res) => {
   try {
-    const patientId = req.user.patientId;
+    const patientId = req.user._id;
+    console.log("Patient ID:", patientId);
     const { doctorId, date, startTime, endTime } = req.body;
     if (!doctorId || !date || !startTime || !endTime) {
       return res

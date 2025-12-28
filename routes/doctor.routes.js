@@ -21,33 +21,32 @@ router.get("/me", protect, authorize("doctor"), doctorController.getMyProfile);
 // @route   GET /api/doctors/:doctorId
 // @desc    Get doctor profile by ID
 // @access  Private (Authenticated users)
-router.get("/:doctorId", protect, doctorController.getDoctorProfile);
+router.get("/:doctorId", doctorController.getDoctorProfile);
 
 // @route   PATCH /api/doctors/me
 // @desc    Update own doctor profile
 // @access  Private (Doctor only)
 router.patch(
-    "/me",
-    protect,
-    authorize("doctor"),
-    validate(updateProfileSchema),
-    doctorController.updateDoctorProfile
+  "/me",
+  protect,
+  authorize("doctor"),
+  validate(updateProfileSchema),
+  doctorController.updateDoctorProfile
 );
 
 // @route   POST /api/doctors/me/documents
 // @desc    Upload verification documents
 // @access  Private (Doctor only)
 router.post(
-    "/me/documents",
-    protect,
-    authorize("doctor"),
-    upload.memory.fields([
-        { name: "phdCertificate", maxCount: 1 },
-        { name: "medicalLicense", maxCount: 1 },
-        { name: "idProof", maxCount: 1 },
-    ]),
-    doctorController.uploadVerificationDocuments
+  "/me/documents",
+  protect,
+  authorize("doctor"),
+  upload.memory.fields([
+    { name: "phdCertificate", maxCount: 1 },
+    { name: "medicalLicense", maxCount: 1 },
+    { name: "idProof", maxCount: 1 },
+  ]),
+  doctorController.uploadVerificationDocuments
 );
 
 module.exports = router;
-
