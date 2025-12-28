@@ -280,6 +280,7 @@ exports.registerPatientService = async (data, file) => {
         firstName: patient.firstName,
         lastName: patient.lastName,
         role: user.role,
+        profilePicture: user.profilePicture,
       },
       accessToken,
       refreshToken,
@@ -367,7 +368,22 @@ exports.loginService = async (email, password) => {
     // Save refresh token
     user.refreshToken = refreshToken;
     user.lastLoginAt = new Date();
+    let firstName = "";
+    let lastName = "";
     await user.save();
+    if (user.role === "patient") {
+      const patient = await Patient.findOne({ userId: user._id });
+      firstName = patient.firstName;
+      lastName = patient.lastName;
+    } else if (user.role === "doctor") {
+      const doctor = await Doctor.findOne({ userId: user._id });
+      firstName = doctor.firstName;
+      lastName = doctor.lastName;
+    } else if (user.role === "admin") {
+      const admin = await Admin.findOne({ userId: user._id });
+      firstName = admin.firstName;
+      lastName = admin.lastName;
+    }
 
     return {
       user: {
@@ -375,6 +391,9 @@ exports.loginService = async (email, password) => {
         email: user.email,
         role: user.role,
         status: user.status,
+        firstName: firstName,
+        lastName: lastName,
+        profilePicture: user.profilePicture,
       },
       accessToken,
       refreshToken,

@@ -105,3 +105,23 @@ exports.getAvailableSlots = async ({ doctorId, date }) => {
     slots,
   };
 };
+
+exports.getAvailableDays = async ({ doctorId }) => {
+  /**
+   * =========================
+   * TASK 1 — Validation
+   * =========================
+   */
+  if (!mongoose.Types.ObjectId.isValid(doctorId)) {
+    throw new Error("Invalid doctorId");
+  }
+  /**
+   * =========================
+   * TASK 2 — Get Available Days
+   * =========================
+   */
+  const availableDays = await scheduleService.getAvailableDaysForDoctor({
+    doctorId,
+  });
+  return availableDays;
+};
