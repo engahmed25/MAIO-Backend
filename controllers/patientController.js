@@ -16,6 +16,7 @@ const {
   logoutAllDevicesService,
   softDeleteAccountService,
   getPatientMedicalDocumentsService,
+  getAssignedDoctorService,
 } = require("../services/patientService");
 
 // @desc    Get authenticated patient's profile
@@ -38,8 +39,7 @@ exports.getMyProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Get patient profile error:", error);
-    const status =
-      error.message === "Patient profile not found" ? 404 : 500;
+    const status = error.message === "Patient profile not found" ? 404 : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve profile",
@@ -87,10 +87,7 @@ exports.updateMyProfile = async (req, res) => {
     }
 
     const updateData = req.validatedData || req.body;
-    const updated = await updatePatientProfileService(
-      req.user._id,
-      updateData
-    );
+    const updated = await updatePatientProfileService(req.user._id, updateData);
 
     return res.status(200).json({
       success: true,
@@ -99,8 +96,7 @@ exports.updateMyProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Update patient profile error:", error);
-    const status =
-      error.message === "Patient profile not found" ? 404 : 500;
+    const status = error.message === "Patient profile not found" ? 404 : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to update profile",
@@ -198,10 +194,7 @@ exports.addMedicalHistory = async (req, res) => {
     }
 
     const historyData = req.validatedData || req.body;
-    const updated = await addMedicalHistoryService(
-      req.user._id,
-      historyData
-    );
+    const updated = await addMedicalHistoryService(req.user._id, historyData);
 
     return res.status(200).json({
       success: true,
@@ -210,8 +203,7 @@ exports.addMedicalHistory = async (req, res) => {
     });
   } catch (error) {
     console.error("Add medical history error:", error);
-    const status =
-      error.message === "Patient profile not found" ? 404 : 500;
+    const status = error.message === "Patient profile not found" ? 404 : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to add medical history",
@@ -244,8 +236,7 @@ exports.updateMedicalHistory = async (req, res) => {
     });
   } catch (error) {
     console.error("Update medical history error:", error);
-    const status =
-      error.message === "Patient profile not found" ? 404 : 500;
+    const status = error.message === "Patient profile not found" ? 404 : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to update medical history",
@@ -257,6 +248,7 @@ exports.updateMedicalHistory = async (req, res) => {
 // @route   POST /api/patients/me/medical-documents
 // @access  Private (patient)
 exports.uploadMedicalDocument = async (req, res) => {
+  console.log("WeAreHere");
   try {
     if (!req.user || req.user.role !== "patient") {
       return res.status(403).json({
@@ -318,8 +310,7 @@ exports.getMedicalRecords = async (req, res) => {
     });
   } catch (error) {
     console.error("Get medical records error:", error);
-    const status =
-      error.message === "Patient profile not found" ? 404 : 500;
+    const status = error.message === "Patient profile not found" ? 404 : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve medical records",
@@ -341,8 +332,7 @@ exports.getPatientMedicalDocuments = async (req, res) => {
     });
   } catch (error) {
     console.error("Get patient medical documents error:", error);
-    const status =
-      error.message === "Patient profile not found" ? 404 : 500;
+    const status = error.message === "Patient profile not found" ? 404 : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve patient medical documents",
@@ -412,8 +402,7 @@ exports.changePassword = async (req, res) => {
   } catch (error) {
     console.error("Change password error:", error);
     const status =
-      error.statusCode ||
-      (error.message === "User not found" ? 404 : 400);
+      error.statusCode || (error.message === "User not found" ? 404 : 400);
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to change password",
@@ -434,15 +423,11 @@ exports.requestContactUpdate = async (req, res) => {
     }
 
     const payload = req.validatedData || req.body;
-    const result = await requestContactUpdateService(
-      req.user._id,
-      payload
-    );
+    const result = await requestContactUpdateService(req.user._id, payload);
 
     return res.status(200).json({
       success: true,
-      message:
-        "Verification code sent. Please confirm to finalize the update.",
+      message: "Verification code sent. Please confirm to finalize the update.",
       data: {
         pendingEmail: result.pendingEmail,
         pendingPhoneNumber: result.pendingPhoneNumber,
@@ -453,8 +438,7 @@ exports.requestContactUpdate = async (req, res) => {
   } catch (error) {
     console.error("Request contact update error:", error);
     const status =
-      error.statusCode ||
-      (error.message === "User not found" ? 404 : 400);
+      error.statusCode || (error.message === "User not found" ? 404 : 400);
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to request contact update",
@@ -485,8 +469,7 @@ exports.confirmContactUpdate = async (req, res) => {
   } catch (error) {
     console.error("Confirm contact update error:", error);
     const status =
-      error.statusCode ||
-      (error.message === "User not found" ? 404 : 400);
+      error.statusCode || (error.message === "User not found" ? 404 : 400);
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to confirm contact update",
@@ -522,8 +505,7 @@ exports.updateAccountStatus = async (req, res) => {
   } catch (error) {
     console.error("Update account status error:", error);
     const status =
-      error.statusCode ||
-      (error.message === "User not found" ? 404 : 400);
+      error.statusCode || (error.message === "User not found" ? 404 : 400);
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to update account status",
@@ -552,8 +534,7 @@ exports.logoutAllDevices = async (req, res) => {
   } catch (error) {
     console.error("Logout all devices error:", error);
     const status =
-      error.statusCode ||
-      (error.message === "User not found" ? 404 : 500);
+      error.statusCode || (error.message === "User not found" ? 404 : 500);
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to logout from all devices",
@@ -583,11 +564,47 @@ exports.softDeleteAccount = async (req, res) => {
   } catch (error) {
     console.error("Soft delete account error:", error);
     const status =
-      error.statusCode ||
-      (error.message === "User not found" ? 404 : 500);
+      error.statusCode || (error.message === "User not found" ? 404 : 500);
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to delete account",
+    });
+  }
+};
+
+exports.getAssignedDoctor = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== "patient") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Patient role required",
+      });
+    }
+    const { patientId } = req.params;
+
+    if (req.user._id.toString() !== patientId) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Patient role required",
+      });
+    }
+    const profile = await getAssignedDoctorService(patientId);
+    return res.status(200).json({
+      success: true,
+      message: "Assigned doctor profile retrieved successfully",
+      data: profile,
+    });
+  } catch (error) {
+    console.error("Get assigned doctor profile error:", error);
+    const status =
+      error.message === "Invalid patient ID format"
+        ? 400
+        : error.message === "Patient profile not found"
+        ? 404
+        : 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Failed to retrieve assigned doctor profile",
     });
   }
 };

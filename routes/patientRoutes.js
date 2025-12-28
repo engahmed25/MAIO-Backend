@@ -14,7 +14,6 @@ const {
   accountStatusSchema,
 } = require("../validators/patientValidator");
 
-
 // Authenticated patient profile
 router.get(
   "/me",
@@ -86,7 +85,7 @@ router.get(
   protect,
   authorize("doctor"),
   patientController.getPatientMedicalDocuments
-)
+);
 
 router.delete(
   "/me/medical-documents/:documentId",
@@ -141,8 +140,15 @@ router.delete(
   authorize("patient"),
   patientController.softDeleteAccount
 );
-
 // Public limited profile
 router.get("/:patientId/public", patientController.getPublicProfile);
+
+// Get Assigned Doctor using Authenticated Patient IS
+router.get(
+  "/assignedDoctor/:patientId",
+  protect,
+  authorize("patient"),
+  patientController.getAssignedDoctor
+);
 
 module.exports = router;
