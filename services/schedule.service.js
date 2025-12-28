@@ -24,3 +24,12 @@ exports.getDoctorScheduleForDate = async ({ doctorId, date }) => {
     maxPatients: s.maxPatients,
   }));
 };
+
+exports.getAvailableDaysForDoctor = async ({ doctorId }) => {
+  const schedules = await DoctorSchedule.find({
+    doctorId,
+  });
+  const availableDays = schedules.map((s) => s.dayOfWeek);
+  // Return unique days
+  return [...new Set(availableDays)];
+};

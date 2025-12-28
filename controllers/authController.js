@@ -196,6 +196,7 @@ exports.requestResetPassword = async (req, res) => {
 exports.submitNewPassword = async (req, res) => {
   try {
     // Accept token/newPassword from body or query (form submissions)
+    // The toke must send in header not in body or query for security reasons
     const token =
       (req.body && req.body.token) || (req.query && req.query.token);
     const newPassword =
