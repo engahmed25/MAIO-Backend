@@ -2,11 +2,20 @@ const mongoose = require("mongoose");
 const Appointment = require("../models/Appointment");
 const Reservation = require("../models/Reservation");
 
+const ACTIVE_APPOINTMENT_STATUSES = ["scheduled", "confirmed"];
+
+const buildDateTime = (date, timeString) => {
+  const [hours, minutes] = (timeString || "00:00").split(":").map(Number);
+  const dt = new Date(date);
+  dt.setHours(hours || 0, minutes || 0, 0, 0);
+  return dt;
+};
+
 exports.getBookedSlotsForDoctor = async ({ doctorId, date }) => {
   return await Appointment.find({
     doctorId,
     appointmentDate: date,
-    status: { $in: ["scheduled", "confirmed"] },
+    status: { $in: ACTIVE_APPOINTMENT_STATUSES },
   }).select("startTime endTime -_id");
 };
 
@@ -40,7 +49,7 @@ exports.confirmAppointmentFromReservation = async ({
           startTime: reservation.startTime,
           endTime: reservation.endTime,
           status: "confirmed",
-          reasonForVisit: "N/A",
+          reasonForVisit: reservation.reasonForVisit || "N/A",
         },
       ],
       { session }
@@ -170,4 +179,40 @@ exports.getAppointmentHistory = async ({
     data: appointments,
     pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
   };
+};
+
+exports.getUpcomingAppointmentsForPatient = async (patientId) => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const appointments = await Appointment.find({
+    patientId,
+    status: { $in: ACTIVE_APPOINTMENT_STATUSES },
+    appointmentDate: { $gte: startOfToday },
+  })
+    .populate("doctorId", "firstName lastName specialization clinicAddress")
+    .sort({ appointmentDate: 1, startTime: 1 });
+
+  const now = new Date();
+  return appointments.filter(
+    (appt) => buildDateTime(appt.appointmentDate, appt.startTime) >= now
+  );
+};
+
+exports.getUpcomingAppointmentsForDoctor = async (doctorId) => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const appointments = await Appointment.find({
+    doctorId,
+    status: { $in: ACTIVE_APPOINTMENT_STATUSES },
+    appointmentDate: { $gte: startOfToday },
+  })
+    .populate("patientId", "firstName lastName")
+    .sort({ appointmentDate: 1, startTime: 1 });
+
+  const now = new Date();
+  return appointments.filter(
+    (appt) => buildDateTime(appt.appointmentDate, appt.startTime) >= now
+  );
 };

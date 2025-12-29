@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const patientController = require("../controllers/patientController");
+const appointmentController = require("../controllers/appointment.controller");
 const { validate } = require("../middleware/validation");
 const { protect, authorize } = require("../middleware/auth");
 const upload = require("../config/multer");
@@ -20,6 +21,13 @@ router.get(
   protect,
   authorize("patient"),
   patientController.getMyProfile
+);
+
+router.get(
+  "/me/appointments/upcoming",
+  protect,
+  authorize("patient"),
+  appointmentController.getUpcomingForPatient
 );
 
 router.patch(

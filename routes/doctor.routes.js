@@ -3,6 +3,7 @@ const router = express.Router();
 
 const doctorController = require("../controllers/doctor.controller");
 const doctorSearchController = require("../controllers/doctorSearch.controller");
+const appointmentController = require("../controllers/appointment.controller");
 const { validate, validateFiles } = require("../middleware/validation");
 const { protect, authorize } = require("../middleware/auth");
 const { updateProfileSchema } = require("../validators/doctorValidator");
@@ -17,6 +18,16 @@ router.get("/search", doctorSearchController.searchDoctors);
 // @desc    Get own doctor profile
 // @access  Private (Doctor only)
 router.get("/me", protect, authorize("doctor"), doctorController.getMyProfile);
+
+// @route   GET /api/doctors/me/appointments/upcoming
+// @desc    Get upcoming appointments for authenticated doctor
+// @access  Private (Doctor only)
+router.get(
+  "/me/appointments/upcoming",
+  protect,
+  authorize("doctor"),
+  appointmentController.getUpcomingForDoctor
+);
 
 // @route   GET /api/doctors/:doctorId
 // @desc    Get doctor profile by ID
