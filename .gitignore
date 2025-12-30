@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .node_modules/
 .package-lock.json
 .package.json
@@ -61,3 +62,7 @@ docs/
 # Uncomment if you DON'T want to track lock files
 # package-lock.json
 # yarn.lock
+=======
+.node_modules/
+>>>>>>> origin/dev
+mintty.exe.stackdump
