@@ -252,6 +252,8 @@ exports.uploadMedicalDocumentService = async (userId, fileBuffer, meta) => {
     title: meta.title || fileBuffer.originalname,
     filePath,
     fileType: fileBuffer.mimetype,
+    doctorName: meta.doctorName || undefined,
+    documentType: meta.documentType || undefined,
   });
   await patient.save();
 

@@ -115,6 +115,24 @@ const patientSchema = new mongoose.Schema(
           fileType: {
             type: String,
           },
+          doctorName: {
+            type: String,
+            required: [true, "Doctor name is required"],
+          },
+          documentType: {
+            type: String,
+            enum: [
+              "Lab Results",
+              "MRI",
+              "X-Ray",
+              "CT Scan",
+              "Ultrasound",
+              "Prescription",
+              "Medical Report",
+              "Vaccination Record",
+            ],
+            required: [true, "Document type is required"],
+          },
           uploadedAt: {
             type: Date,
             default: Date.now,
