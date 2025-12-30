@@ -120,6 +120,50 @@ exports.findPendingReservationById = async ({ reservationId, patientId }) => {
   return Reservation.findOne(filter);
 };
 
+exports.getReservationDetailsForPatient = async ({
+  reservationId,
+  patientId,
+}) => {
+  if (!mongoose.Types.ObjectId.isValid(reservationId)) {
+    const error = new Error("Invalid reservationId");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const reservation = await Reservation.findOne({
+    _id: reservationId,
+    patientId,
+  })
+    .populate(
+      "doctorId",
+      "firstName lastName specialization ratePerSession clinicAddress"
+    )
+    .lean();
+
+  if (!reservation) {
+    const error = new Error("Reservation not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const now = new Date();
+  const isExpiredStatus = reservation.status === "EXPIRED";
+  const isPendingAndExpired =
+    reservation.status === "PENDING" && reservation.expiresAt <= now;
+
+  if (isExpiredStatus || isPendingAndExpired) {
+    // Clean up pending reservations that passed TTL
+    if (isPendingAndExpired) {
+      await Reservation.deleteOne({ _id: reservation._id });
+    }
+    const error = new Error("Reservation has expired");
+    error.statusCode = 410;
+    throw error;
+  }
+
+  return reservation;
+};
+
 exports.releaseReservation = async (reservationId) => {
   if (!mongoose.Types.ObjectId.isValid(reservationId)) {
     return;
