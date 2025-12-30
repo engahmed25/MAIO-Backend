@@ -4,6 +4,10 @@ const paymentSchema = new mongoose.Schema(
     appointmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Appointment",
+    },
+    reservationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Reservation",
       required: true,
     },
     patientId: {
@@ -27,15 +31,22 @@ const paymentSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       enum: ["cash", "card", "insurance", "online", "bank_transfer"],
-      required: true,
+      default: "card",
     },
     status: {
       type: String,
       enum: ["pending", "completed", "failed", "refunded", "cancelled"],
       default: "pending",
     },
+    paymentIntentId: {
+      type: String,
+      index: true,
+    },
     transactionId: String,
-    paymentGateway: String,
+    paymentGateway: {
+      type: String,
+      default: "stripe",
+    },
     paymentDetails: mongoose.Schema.Types.Mixed,
     paidAt: Date,
     refundedAt: Date,
@@ -50,5 +61,6 @@ const paymentSchema = new mongoose.Schema(
 
 paymentSchema.index({ patientId: 1, status: 1 });
 paymentSchema.index({ doctorId: 1, createdAt: -1 });
+paymentSchema.index({ reservationId: 1 });
 
 module.exports = mongoose.model("Payment", paymentSchema);

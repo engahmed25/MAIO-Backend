@@ -7,4 +7,13 @@ const { protect, authorize } = require("../middleware/auth");
 // Protect route and allow only patients to reserve
 router.post("/", protect, authorize("patient"), controller.reserveSlot);
 
+// GET /api/reservations/:reservationId
+// Fetch reservation details for the authenticated patient
+router.get(
+  "/:reservationId",
+  protect,
+  authorize("patient"),
+  controller.getReservationDetails
+);
+
 module.exports = router;

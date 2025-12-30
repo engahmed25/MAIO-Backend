@@ -1,8 +1,30 @@
 const appointmentService = require("../services/appointment.service");
+const Patient = require("../models/Patient");
+const Doctor = require("../models/Doctor");
+
+const getPatientIdFromUser = async (userId) => {
+  const patient = await Patient.findOne({ userId }).select("_id");
+  if (!patient) {
+    const error = new Error("Patient profile not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  return patient._id;
+};
+
+const getDoctorIdFromUser = async (userId) => {
+  const doctor = await Doctor.findOne({ userId }).select("_id");
+  if (!doctor) {
+    const error = new Error("Doctor profile not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  return doctor._id;
+};
 
 exports.confirmAppointment = async (req, res) => {
   try {
-    const patientId = req.user.patientId; // from auth middleware
+    const patientId = await getPatientIdFromUser(req.user._id);
     const { reservationId } = req.body;
 
     if (!reservationId) {
@@ -22,7 +44,8 @@ exports.confirmAppointment = async (req, res) => {
       appointment,
     });
   } catch (error) {
-    res.status(409).json({
+    const status = error.statusCode || 409;
+    res.status(status).json({
       success: false,
       message: error.message,
     });
@@ -31,10 +54,10 @@ exports.confirmAppointment = async (req, res) => {
 
 exports.getMyAppointments = async (req, res) => {
   try {
-    const patientId = req.user.patientId;
+    const patientId = await getPatientIdFromUser(req.user._id);
     const { type, page, limit } = req.body;
 
-    const result = appointmentService.getMyAppointments({
+    const result = await appointmentService.getMyAppointments({
       patientId,
       type,
       page: Number(page) || 1,
@@ -43,13 +66,14 @@ exports.getMyAppointments = async (req, res) => {
 
     res.status(200).json({ success: true, ...result });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    const status = error.statusCode || 400;
+    res.status(status).json({ success: false, message: error.message });
   }
 };
 
 exports.getAppointmentDetails = async (req, res) => {
   try {
-    const patientId = req.user.patientId;
+    const patientId = await getPatientIdFromUser(req.user._id);
     const { appointmentId } = req.params;
 
     if (!appointmentId) {
@@ -78,7 +102,8 @@ exports.getAppointmentDetails = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(404).json({
+    const status = error.statusCode || 404;
+    res.status(status).json({
       success: false,
       message: error.message,
     });
@@ -87,10 +112,10 @@ exports.getAppointmentDetails = async (req, res) => {
 
 exports.getAppointmentHistory = async (req, res) => {
   try {
-    const patientId = req.user.patientId;
+    const patientId = await getPatientIdFromUser(req.user._id);
     const { doctorId, startDate, endDate, page, limit } = req.query;
 
-    const result = await appointmentService({
+    const result = await appointmentService.getAppointmentHistory({
       patientId,
       doctorId,
       startDate,
@@ -104,7 +129,46 @@ exports.getAppointmentHistory = async (req, res) => {
       ...result,
     });
   } catch (error) {
-    res.status(400).json({
+    const status = error.statusCode || 400;
+    res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getUpcomingForPatient = async (req, res) => {
+  try {
+    const patientId = await getPatientIdFromUser(req.user._id);
+    const appointments =
+      await appointmentService.getUpcomingAppointmentsForPatient(patientId);
+
+    return res.status(200).json({
+      success: true,
+      data: appointments,
+    });
+  } catch (error) {
+    const status = error.statusCode || 400;
+    return res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getUpcomingForDoctor = async (req, res) => {
+  try {
+    const doctorId = await getDoctorIdFromUser(req.user._id);
+    const appointments =
+      await appointmentService.getUpcomingAppointmentsForDoctor(doctorId);
+
+    return res.status(200).json({
+      success: true,
+      data: appointments,
+    });
+  } catch (error) {
+    const status = error.statusCode || 400;
+    return res.status(status).json({
       success: false,
       message: error.message,
     });

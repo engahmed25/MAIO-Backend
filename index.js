@@ -16,9 +16,11 @@ const patientRouter = require("./routes/patientRoutes");
 const availabilityRouter = require("./routes/availability.routes");
 const appointmentRouter = require("./routes/appointment.routes");
 const reservationRouter = require("./routes/reservation.routes");
+const paymentRouter = require("./routes/payment.routes");
 
 // Middleware
 app.use(cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -38,6 +40,7 @@ app.use("/api/patients", patientRouter);
 app.use("/api", availabilityRouter);
 app.use("/api/appointments", appointmentRouter);
 app.use("/api/reservations", reservationRouter);
+app.use("/api/payments", paymentRouter);
 
 // Health check route
 app.get("/health", (req, res) => {

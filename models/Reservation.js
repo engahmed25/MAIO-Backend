@@ -32,8 +32,29 @@ const reservationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["PENDING"],
+      enum: ["PENDING", "PAID", "EXPIRED", "FAILED", "CANCELLED"],
       default: "PENDING",
+    },
+    reasonForVisit: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    amount: {
+      // Major units (e.g. USD)
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    currency: {
+      type: String,
+      default: "usd",
+      uppercase: true,
+    },
+    appointmentCode: {
+      type: String,
+      required: true,
+      index: true,
     },
 
     // TTL field
