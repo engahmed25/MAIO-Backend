@@ -248,7 +248,6 @@ exports.updateMedicalHistory = async (req, res) => {
 // @route   POST /api/patients/me/medical-documents
 // @access  Private (patient)
 exports.uploadMedicalDocument = async (req, res) => {
-  console.log("WeAreHere");
   try {
     if (!req.user || req.user.role !== "patient") {
       return res.status(403).json({
@@ -263,7 +262,7 @@ exports.uploadMedicalDocument = async (req, res) => {
       (req.files && req.files.medicalDocument
         ? req.files.medicalDocument[0]
         : null);
-
+    console.log("Uploaded file:", file);
     const document = await uploadMedicalDocumentService(
       req.user._id,
       file,

@@ -246,12 +246,13 @@ exports.uploadMedicalDocumentService = async (userId, fileBuffer, meta) => {
   if (!patient) {
     throw new Error("Patient profile not found");
   }
-
   const filePath = await persistFileFromBuffer(fileBuffer, "medicalDocument");
   patient.medicalDocuments.push({
     title: meta.title || fileBuffer.originalname,
     filePath,
     fileType: fileBuffer.mimetype,
+    doctorName: meta.doctorName || undefined,
+    documentType: meta.documentType || undefined,
   });
   await patient.save();
 

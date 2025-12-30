@@ -25,6 +25,8 @@ const medicalHistorySchema = Joi.object({
 
 const medicalDocumentMetaSchema = Joi.object({
   title: Joi.string().max(120).optional(),
+  doctorName: Joi.string().max(100).optional(),
+  documentType: Joi.string().max(50).optional(),
 });
 
 const changePasswordSchema = Joi.object({
