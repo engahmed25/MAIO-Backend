@@ -4,6 +4,15 @@ const Reservation = require("../models/Reservation");
 
 const ACTIVE_APPOINTMENT_STATUSES = ["scheduled", "confirmed"];
 
+const normalizeDate = (dateValue) => {
+  const parsed = new Date(dateValue);
+  if (isNaN(parsed.getTime())) {
+    throw new Error("Invalid date format. Use YYYY-MM-DD");
+  }
+  parsed.setHours(0, 0, 0, 0);
+  return parsed;
+};
+
 const buildDateTime = (date, timeString) => {
   const [hours, minutes] = (timeString || "00:00").split(":").map(Number);
   const dt = new Date(date);
@@ -12,9 +21,11 @@ const buildDateTime = (date, timeString) => {
 };
 
 exports.getBookedSlotsForDoctor = async ({ doctorId, date }) => {
+  const appointmentDate = normalizeDate(date);
+
   return await Appointment.find({
     doctorId,
-    appointmentDate: date,
+    appointmentDate,
     status: { $in: ACTIVE_APPOINTMENT_STATUSES },
   }).select("startTime endTime -_id");
 };
