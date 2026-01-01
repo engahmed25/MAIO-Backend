@@ -246,3 +246,61 @@ exports.cancelAppointment = async (req, res) => {
     });
   }
 };
+
+exports.getDoctorAppointmentsByDate = async (req, res) => {
+  try {
+    const doctorId = await getDoctorIdFromUser(req.user._id);
+    const { date } = req.params;
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "date parameter is required",
+      });
+    }
+
+    const result = await appointmentService.getAppointmentsForDoctorByDate({
+      doctorId,
+      date,
+    });
+
+    res.status(200).json({
+      success: true,
+      date: date,
+      totalAppointments: result.totalAppointments,
+      appointments: result.appointments,
+    });
+  } catch (error) {
+    const status = error.statusCode || 400;
+    res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getDoctorPatients = async (req, res) => {
+  try {
+    const doctorId = await getDoctorIdFromUser(req.user._id);
+    const { page, limit } = req.query;
+
+    const result = await appointmentService.getDoctorPatient({
+      doctorId,
+      page: Number(page || 1),
+      limit: Number(limit) || 10,
+    });
+
+    res.status(200).json({
+      success: true,
+      totalPatients: result.totalPatients,
+      patients: result.patients,
+      pagination: result.pagination,
+    });
+  } catch (error) {
+    const status = error.statusCode || 400;
+    res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

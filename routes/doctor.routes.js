@@ -70,4 +70,23 @@ router.post(
   doctorController.uploadVerificationDocuments
 );
 
+// @route   GET /api/doctors/me/appointments/date/:date
+// @desc    Get all appointments for authenticated doctor on a specific date
+// @access  Private (Doctor only)
+router.get(
+  "/me/appointments/date/:date",
+  protect,
+  authorize("doctor"),
+  appointmentController.getDoctorAppointmentsByDate
+);
+
+// @route   GET /api/doctors/me/patients
+// @desc    Get all patients for authenticated doctor with overview details
+// @access  Private (Doctor only)
+router.get(
+  "/me/patients",
+  protect,
+  authorize("doctor"),
+  appointmentController.getDoctorPatients
+);
 module.exports = router;

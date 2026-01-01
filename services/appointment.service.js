@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Appointment = require("../models/Appointment");
 const Reservation = require("../models/Reservation");
+const Patient = require("../models/Patient");
 
 const ACTIVE_APPOINTMENT_STATUSES = ["scheduled", "confirmed"];
 
@@ -300,4 +301,194 @@ exports.cancelAppointment = async ({ appointmentId, patientId }) => {
   await appointment.save();
 
   return appointment;
+};
+
+exports.getAppointmentsForDoctorByDate = async ({ doctorId, date }) => {
+  // Normalize the date to start of day
+  const appointmentDate = normalizeDate(date);
+
+  // Find appointments for the doctor on the specified date
+  const appointments = await Appointment.find({
+    doctorId,
+    appointmentDate,
+    status: { $in: ACTIVE_APPOINTMENT_STATUSES },
+  })
+    .populate({
+      path: "patientId",
+      select:
+        "firstName lastName age gender phoneNumber emergencyContactNumber drugAllergies illnesses currentMedications medicalHistory",
+    })
+    .sort({ startTime: 1 }) // Sort by start time ascending
+    .lean();
+
+  // Format the response
+  const formattedAppointments = appointments.map((appointment) => ({
+    appointmentId: appointment._id,
+    patientName: appointment.patientId
+      ? `${appointment.patientId.firstName} ${appointment.patientId.lastName}`
+      : "Unknown Patient",
+    patientInfo: {
+      age: appointment.patientId?.age,
+      gender: appointment.patientId?.gender,
+      phoneNumber: appointment.patientId?.phoneNumber,
+      emergencyContact: appointment.patientId?.emergencyContactNumber,
+    },
+    medicalInfo: {
+      drugAllergies: appointment.patientId?.drugAllergies || "None",
+      illnesses: appointment.patientId?.illnesses || [],
+      currentMedications: appointment.patientId?.currentMedications || "None",
+      chronicDiseases:
+        appointment.patientId?.medicalHistory?.chronicDiseases || [],
+      allergies: appointment.patientId?.medicalHistory?.allergies || [],
+      medicalNotes: appointment.patientId?.medicalHistory?.notes || "",
+    },
+    appointmentDetails: {
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      status: appointment.status,
+      reasonForVisit: appointment.reasonForVisit,
+      notes: appointment.notes || "",
+    },
+    createdAt: appointment.createdAt,
+  }));
+
+  return {
+    totalAppointments: formattedAppointments.length,
+    appointments: formattedAppointments,
+  };
+};
+
+exports.getDoctorPatient = async ({ doctorId, page = 1, limit = 20 }) => {
+  const skip = (page - 1) * limit;
+
+  // Get all unique patient IDs who have appointments with this doctor
+  const patientIds = await Appointment.distinct("patientId", {
+    doctorId,
+    status: { $in: ["confirmed", "completed"] },
+  });
+
+  // Build patient filter
+  const patientFilter = { _id: { $in: patientIds } };
+
+  // Get patients with pagination
+  const [patients, totalPatients] = await Promise.all([
+    Patient.find(patientFilter)
+      .select(
+        "firstName lastName age gender emergencyContactNumber drugAllergies illnesses currentMedications medicalHistory reasonForSeeingDoctor createdAt"
+      )
+      .sort({ firstName: 1, lastName: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Patient.countDocuments(patientFilter),
+  ]);
+
+  // Get appointment statistics for each patient
+  const patientsWithStats = await Promise.all(
+    patients.map(async (patient) => {
+      const appointmentStats = await Appointment.aggregate([
+        {
+          $match: {
+            doctorId: doctorId,
+            patientId: patient._id,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalAppointments: { $sum: 1 },
+            completedAppointments: {
+              $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+            },
+            upcomingAppointments: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $in: ["$status", ["confirmed", "scheduled"]] },
+                      { $gte: ["$appointmentDate", new Date()] },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            lastAppointment: {
+              $max: {
+                $cond: [
+                  { $eq: ["$status", "completed"] },
+                  "$appointmentDate",
+                  null,
+                ],
+              },
+            },
+            nextAppointment: {
+              $min: {
+                $cond: [
+                  {
+                    $and: [
+                      { $in: ["$status", ["confirmed", "scheduled"]] },
+                      { $gte: ["$appointmentDate", new Date()] },
+                    ],
+                  },
+                  "$appointmentDate",
+                  null,
+                ],
+              },
+            },
+          },
+        },
+      ]);
+
+      const stats = appointmentStats[0] || {
+        totalAppointments: 0,
+        completedAppointments: 0,
+        upcomingAppointments: 0,
+        lastAppointment: null,
+        nextAppointment: null,
+      };
+
+      return {
+        patientId: patient._id,
+        personalInfo: {
+          fullName: `${patient.firstName} ${patient.lastName}`,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          age: patient.age,
+          gender: patient.gender,
+          emergencyContact: patient.emergencyContactNumber,
+        },
+        medicalOverview: {
+          reasonForSeeingDoctor: patient.reasonForSeeingDoctor,
+          drugAllergies: patient.drugAllergies || "None",
+          illnesses: patient.illnesses || [],
+          currentMedications: patient.currentMedications || "None",
+          chronicDiseases: patient.medicalHistory?.chronicDiseases || [],
+          allergies: patient.medicalHistory?.allergies || [],
+          medicalNotes: patient.medicalHistory?.notes || "",
+        },
+        appointmentStats: {
+          totalAppointments: stats.totalAppointments,
+          completedAppointments: stats.completedAppointments,
+          upcomingAppointments: stats.upcomingAppointments,
+          lastVisit: stats.lastAppointment,
+          nextVisit: stats.nextAppointment,
+        },
+        registeredDate: patient.createdAt,
+      };
+    })
+  );
+
+  return {
+    totalPatients,
+    patients: patientsWithStats,
+    pagination: {
+      currentPage: page,
+      totalPages: Math.ceil(totalPatients / limit),
+      limit,
+      hasNextPage: page < Math.ceil(totalPatients / limit),
+      hasPrevPage: page > 1,
+    },
+  };
 };
