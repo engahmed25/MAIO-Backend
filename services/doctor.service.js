@@ -3,6 +3,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
+const Patient = require("../models/Patient");
 const Appointment = require("../models/Appointment");
 
 // Helper function to persist files from buffer to disk (reused from authService)
@@ -59,6 +60,18 @@ const deleteOldFile = (filePath) => {
     // Log error but don't throw - file cleanup failure shouldn't break the operation
     console.error(`Error deleting old file ${filePath}:`, error);
   }
+};
+
+const mapDoctorProfile = (doctorDoc) => {
+  const doctor = doctorDoc?.toObject ? doctorDoc.toObject() : doctorDoc;
+
+  return {
+    ...doctor,
+    email: doctor.userId?.email,
+    status: doctor.userId?.status,
+    profilePicture: doctor.userId?.profilePicture,
+    userId: doctor.userId?._id,
+  };
 };
 
 // @desc    Get doctor profile by userId
@@ -267,4 +280,60 @@ exports.uploadVerificationDocumentsService = async (userId, files) => {
     }
     throw error;
   }
+};
+
+// @desc    List all other doctors a patient has seen, available to a doctor with an appointment
+// @access  Private (Doctor only)
+exports.getPatientDoctorsForDoctorService = async ({
+  doctorUserId,
+  patientUserId,
+}) => {
+  if (!mongoose.Types.ObjectId.isValid(patientUserId)) {
+    throw new Error("Invalid patient ID format");
+  }
+
+  const patient =
+    (await Patient.findById(patientUserId).select("_id")) ||
+    (await Patient.findOne({ userId: patientUserId }).select("_id"));
+
+  const doctor = await Doctor.findOne({ userId: doctorUserId }).select("_id");
+
+  if (!patient) {
+    throw new Error("Patient profile not found");
+  }
+
+  if (!doctor) {
+    throw new Error("Doctor profile not found");
+  }
+
+  const hasAppointment = await Appointment.exists({
+    patientId: patient._id,
+    doctorId: doctor._id,
+    status: { $ne: "cancelled" },
+  });
+
+  if (!hasAppointment) {
+    const error = new Error("Access denied: no appointment with this patient");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const doctorIds = await Appointment.distinct("doctorId", {
+    patientId: patient._id,
+    status: { $ne: "cancelled" },
+  });
+
+  const otherDoctorIds = doctorIds.filter(
+    (id) => id?.toString() !== doctor._id.toString()
+  );
+
+  if (otherDoctorIds.length === 0) {
+    return [];
+  }
+
+  const doctors = await Doctor.find({ _id: { $in: otherDoctorIds } })
+    .populate("userId", "email status profilePicture")
+    .lean();
+
+  return doctors.map(mapDoctorProfile);
 };

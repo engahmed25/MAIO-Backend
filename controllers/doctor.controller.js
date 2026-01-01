@@ -3,6 +3,7 @@ const {
     getDoctorProfileByIdService,
     updateDoctorProfileService,
     uploadVerificationDocumentsService,
+    getPatientDoctorsForDoctorService,
 } = require("../services/doctor.service");
 
 // @desc    Get doctor profile by doctorId
@@ -160,6 +161,59 @@ exports.uploadVerificationDocuments = async (req, res) => {
         return res.status(status).json({
             success: false,
             message: error.message || "Failed to upload verification documents",
+        });
+    }
+};
+
+// @desc    Get all other doctors a patient has seen (requires an appointment with the patient)
+// @route   GET /api/doctors/patients/:patientId/doctors
+// @access  Private (Doctor only)
+exports.getPatientDoctors = async (req, res) => {
+    try {
+        if (!req.user || req.user.role !== "doctor") {
+            return res.status(403).json({
+                success: false,
+                message: "Access denied. Doctor role required",
+            });
+        }
+
+        const { patientId } = req.params;
+
+        if (!patientId) {
+            return res.status(400).json({
+                success: false,
+                message: "Patient ID is required",
+            });
+        }
+
+        const doctors = await getPatientDoctorsForDoctorService({
+            doctorUserId: req.user._id,
+            patientUserId: patientId,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Patient doctors retrieved successfully",
+            data: doctors,
+        });
+    } catch (error) {
+        console.error("Get patient doctors error:", error);
+
+        const status =
+            error.statusCode ||
+            (error.message === "Invalid patient ID format"
+                ? 400
+                : error.message === "Patient profile not found" ||
+                  error.message === "Doctor profile not found"
+                ? 404
+                : error.message ===
+                  "Access denied: no appointment with this patient"
+                ? 403
+                : 500);
+
+        return res.status(status).json({
+            success: false,
+            message: error.message || "Failed to retrieve patient doctors",
         });
     }
 };
