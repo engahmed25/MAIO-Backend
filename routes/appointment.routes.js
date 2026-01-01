@@ -42,4 +42,20 @@ router.get(
   controller.getAppointmentDetails
 );
 
+// PUT /api/appointments/:appointmentId/reschedule
+router.put(
+  "/:appointmentId/reschedule",
+  protect,
+  authorize("patient"),
+  controller.rescheduleAppointment
+);
+
+// DELETE /api/appointments/:appointmentId
+router.delete(
+  "/:appointmentId",
+  protect,
+  authorize("patient"),
+  controller.cancelAppointment
+);
+
 module.exports = router;

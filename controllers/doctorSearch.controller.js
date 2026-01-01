@@ -66,7 +66,9 @@ exports.searchDoctors = async (req, res) => {
     ) {
       errors.push({
         field: "specialization",
-        message: `Invalid specialization. Must be one of: ${VALID_SPECIALIZATIONS.join(", ")}`,
+        message: `Invalid specialization. Must be one of: ${VALID_SPECIALIZATIONS.join(
+          ", "
+        )}`,
       });
     }
 
@@ -74,7 +76,9 @@ exports.searchDoctors = async (req, res) => {
     if (queryParams.sortBy && !VALID_SORT_FIELDS.includes(queryParams.sortBy)) {
       errors.push({
         field: "sortBy",
-        message: `Invalid sortBy field. Must be one of: ${VALID_SORT_FIELDS.join(", ")}`,
+        message: `Invalid sortBy field. Must be one of: ${VALID_SORT_FIELDS.join(
+          ", "
+        )}`,
       });
     }
 
@@ -153,4 +157,3 @@ exports.searchDoctors = async (req, res) => {
     });
   }
 };
-

@@ -227,3 +227,77 @@ exports.getUpcomingAppointmentsForDoctor = async (doctorId) => {
     (appt) => buildDateTime(appt.appointmentDate, appt.startTime) >= now
   );
 };
+exports.rescheduleAppointment = async ({
+  appointmentId,
+  patientId,
+  newDate,
+  newStartTime,
+  newEndTime,
+}) => {
+  // 1️⃣ Find the appointment
+  const appointment = await Appointment.findOne({
+    _id: appointmentId,
+    patientId,
+    status: { $in: ACTIVE_APPOINTMENT_STATUSES },
+  });
+
+  if (!appointment) {
+    throw new Error("Appointment not found or cannot be rescheduled");
+  }
+
+  // 2️⃣ Normalize the new date
+  const newAppointmentDate = normalizeDate(newDate);
+
+  // 3️⃣ Check if the new slot is available
+  const conflictingAppointment = await Appointment.findOne({
+    doctorId: appointment.doctorId,
+    appointmentDate: newAppointmentDate,
+    startTime: newStartTime,
+    status: { $in: ACTIVE_APPOINTMENT_STATUSES },
+    _id: { $ne: appointmentId }, // Exclude current appointment
+  });
+
+  if (conflictingAppointment) {
+    throw new Error("The selected time slot is not available");
+  }
+
+  // 4️⃣ Update the appointment
+  appointment.appointmentDate = newAppointmentDate;
+  appointment.startTime = newStartTime;
+  appointment.endTime = newEndTime;
+  appointment.status = "scheduled"; // Reset to scheduled after reschedule
+
+  await appointment.save();
+
+  // Return populated appointment
+  return await Appointment.findById(appointment._id).populate(
+    "doctorId",
+    "firstName lastName specialization"
+  );
+};
+
+exports.cancelAppointment = async ({ appointmentId, patientId }) => {
+  const appointment = await Appointment.findOne({
+    _id: appointmentId,
+    patientId,
+  });
+
+  if (!appointment) {
+    const error = new Error("Appointment not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (appointment.status === "cancelled") {
+    throw new Error("Appointment is already cancelled");
+  }
+
+  if (appointment.status === "completed") {
+    throw new Error("Cannot cancel a completed appointment");
+  }
+
+  appointment.status = "cancelled";
+  await appointment.save();
+
+  return appointment;
+};

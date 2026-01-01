@@ -174,3 +174,75 @@ exports.getUpcomingForDoctor = async (req, res) => {
     });
   }
 };
+
+exports.rescheduleAppointment = async (req, res) => {
+  try {
+    const patientId = await getPatientIdFromUser(req.user._id);
+    const { appointmentId } = req.params;
+    const { newDate, newStartTime, newEndTime } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "appointmentId is required",
+      });
+    }
+
+    if (!newDate || !newStartTime || !newEndTime) {
+      return res.status(400).json({
+        success: false,
+        message: "newDate, newStartTime, and newEndTime are required",
+      });
+    }
+
+    const appointment = await appointmentService.rescheduleAppointment({
+      appointmentId,
+      patientId,
+      newDate,
+      newStartTime,
+      newEndTime,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment rescheduled successfully",
+      data: appointment,
+    });
+  } catch (error) {
+    const status = error.statusCode || 400;
+    res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.cancelAppointment = async (req, res) => {
+  try {
+    const patientId = await getPatientIdFromUser(req.user._id);
+    const { appointmentId } = req.params;
+
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "appointmentId is required",
+      });
+    }
+
+    await appointmentService.cancelAppointment({
+      appointmentId,
+      patientId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment cancelled successfully",
+    });
+  } catch (error) {
+    const status = error.statusCode || 404;
+    res.status(status).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
