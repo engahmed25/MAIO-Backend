@@ -173,4 +173,14 @@ router.get(
   patientController.getAssignedDoctor
 );
 
+// @route   GET /api/patients/me/prescriptions
+// @desc    Get all prescriptions for authenticated patient
+// @access  Private (Patient only)
+router.get(
+  "/me/prescriptions",
+  protect,
+  authorize("patient"),
+  patientController.getMyPrescriptions
+);
+
 module.exports = router;

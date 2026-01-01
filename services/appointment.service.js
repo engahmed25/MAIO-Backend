@@ -327,6 +327,7 @@ exports.getAppointmentsForDoctorByDate = async ({ doctorId, date }) => {
     patientName: appointment.patientId
       ? `${appointment.patientId.firstName} ${appointment.patientId.lastName}`
       : "Unknown Patient",
+    patientId: appointment.patientId?._id || null,
     patientInfo: {
       age: appointment.patientId?.age,
       gender: appointment.patientId?.gender,

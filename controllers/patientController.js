@@ -18,6 +18,7 @@ const {
   getPatientMedicalDocumentsService,
   getAssignedDoctorService,
   getPatientMedicalHistoryService,
+  getPrescriptionsService,
 } = require("../services/patientService");
 
 // @desc    Get authenticated patient's profile
@@ -666,6 +667,42 @@ exports.getAssignedDoctor = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve assigned doctor profile",
+    });
+  }
+};
+
+// @desc    Get all prescriptions for authenticated patient
+// @route   GET /api/patients/me/prescriptions
+// @access  Private (Patient only)
+exports.getMyPrescriptions = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== "patient") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Patient role required",
+      });
+    }
+
+    const { status } = req.query;
+
+    const prescriptions = await getPrescriptionsService({
+      userId: req.user._id,
+      status,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Prescriptions retrieved successfully",
+      data: prescriptions,
+    });
+  } catch (error) {
+    console.error("Get prescriptions error:", error);
+    const statusCode =
+      error.message === "Patient profile not found" ? 404 : 500;
+
+    return res.status(statusCode).json({
+      success: false,
+      message: error.message || "Failed to retrieve prescriptions",
     });
   }
 };

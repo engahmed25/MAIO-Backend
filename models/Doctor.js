@@ -32,6 +32,11 @@ const doctorSchema = new mongoose.Schema(
       enum: ["male", "female", "other"],
       default: "male",
     },
+    age: {
+      type: Number,
+      min: [0, "Age cannot be negative"],
+      max: [150, "Please provide a valid age"],
+    },
     yearsOfExperience: {
       type: Number,
       required: [true, "Years of experience is required"],

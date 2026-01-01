@@ -96,6 +96,12 @@ exports.getPublicProfileService = async (patientId) => {
     gender: patient.gender,
     profilePicture: patient.userId?.profilePicture || null,
     illnesses: patient.illnesses || [],
+    age: patient.age || null,
+    emergencyContactNumber: patient.emergencyContactNumber || null,
+    drugAllergies: patient.drugAllergies || null,
+    operations: patient.operations || null,
+    currentMedications: patient.currentMedications || null,
+    smoking: patient.smoking || null,
   };
 };
 
@@ -564,4 +570,53 @@ exports.getAssignedDoctorService = async (patientId) => {
     throw new Error("Patient profile not found");
   }
   return Doctors.assignedDoctors || [];
+};
+
+// @desc    Get all prescriptions for a patient
+// @access  Private (Patient only)
+exports.getPrescriptionsService = async ({ userId, status }) => {
+  const patient = await Patient.findOne({ userId }).populate({
+    path: "prescriptions.prescribedBy",
+    select: "firstName lastName specialization",
+  });
+
+  if (!patient) {
+    throw new Error("Patient profile not found");
+  }
+
+  let prescriptions = patient.prescriptions;
+
+  // Filter by status if provided
+  if (status && ["active", "completed", "discontinued"].includes(status)) {
+    prescriptions = prescriptions.filter((p) => p.status === status);
+  }
+
+  // Format prescriptions
+  const formattedPrescriptions = prescriptions.map((prescription) => ({
+    _id: prescription._id,
+    drugName: prescription.drugName,
+    concentration: prescription.concentration,
+    timesPerDay: prescription.timesPerDay,
+    dosageTiming: prescription.dosageTiming,
+    prescribedBy: {
+      _id: prescription.prescribedBy._id,
+      fullName: `Dr. ${prescription.prescribedBy.firstName} ${prescription.prescribedBy.lastName}`,
+      specialization: prescription.prescribedBy.specialization,
+    },
+    startDate: prescription.startDate,
+    status: prescription.status,
+    notes: prescription.notes || "",
+    createdAt: prescription.createdAt,
+  }));
+
+  // Sort by date (newest first)
+  formattedPrescriptions.sort((a, b) => b.startDate - a.startDate);
+
+  return {
+    totalPrescriptions: formattedPrescriptions.length,
+    activePrescriptions: formattedPrescriptions.filter(
+      (p) => p.status === "active"
+    ).length,
+    prescriptions: formattedPrescriptions,
+  };
 };

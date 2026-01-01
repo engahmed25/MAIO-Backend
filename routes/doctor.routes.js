@@ -52,7 +52,7 @@ router.patch(
   protect,
   authorize("doctor"),
   validate(updateProfileSchema),
-  doctorController.updateDoctorProfile
+  doctorController.updateMyProfile
 );
 
 // @route   POST /api/doctors/me/documents
@@ -88,5 +88,56 @@ router.get(
   protect,
   authorize("doctor"),
   appointmentController.getDoctorPatients
+);
+
+// @route   PATCH /api/doctors/me/profile-picture
+// @desc    Update doctor profile picture
+// @access  Private (Doctor only)
+router.patch(
+  "/me/profile-picture",
+  protect,
+  authorize("doctor"),
+  upload.memory.single("profilePicture"),
+  doctorController.updateDoctorProfilePicture
+);
+
+// @route   POST /api/doctors/patients/:patientId/prescriptions
+// @desc    Add prescription for a patient
+// @access  Private (Doctor only)
+router.post(
+  "/patients/:patientId/prescriptions",
+  protect,
+  authorize("doctor"),
+  doctorController.addPrescription
+);
+
+// @route   PATCH /api/doctors/patients/:patientId/prescriptions/:prescriptionId
+// @desc    Update prescription status (discontinue, complete, etc.)
+// @access  Private (Doctor only)
+router.patch(
+  "/patients/:patientId/prescriptions/:prescriptionId",
+  protect,
+  authorize("doctor"),
+  doctorController.updatePrescription
+);
+
+// @route   GET /api/doctors/patients/:patientId/prescriptions
+// @desc    Get all prescriptions written by doctor for a specific patient
+// @access  Private (Doctor only)
+router.get(
+  "/patients/:patientId/prescriptions",
+  protect,
+  authorize("doctor"),
+  doctorController.getPatientPrescriptions
+);
+
+// @route   GET /api/doctors/patients/:patientId/prescriptions/:prescriptionId
+// @desc    Get specific prescription details written by doctor
+// @access  Private (Doctor only)
+router.get(
+  "/patients/:patientId/prescriptions/:prescriptionId",
+  protect,
+  authorize("doctor"),
+  doctorController.getPatientPrescriptionDetails
 );
 module.exports = router;
