@@ -448,7 +448,7 @@ exports.refreshTokens = async (refreshToken) => {
     throw error;
   }
 };
-exports.logout = async (userId) => {
+exports.logoutService = async (userId) => {
   try {
     if (!userId) {
       const err = new Error("User ID is required");

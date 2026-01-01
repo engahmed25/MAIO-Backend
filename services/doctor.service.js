@@ -3,6 +3,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
+const Appointment = require("../models/Appointment");
 
 // Helper function to persist files from buffer to disk (reused from authService)
 const persistFileFromBuffer = async (fileBuffer, fieldName) => {
@@ -71,12 +72,19 @@ exports.getDoctorProfileService = async (userId) => {
     throw new Error("Doctor profile not found");
   }
 
+  // Get total unique patients from appointments
+  const totalPatients = await Appointment.distinct("patientId", {
+    doctorId: doctor._id,
+    status: { $in: ["confirmed", "completed"] }, // Only count confirmed or completed appointments
+  }).then((patientIds) => patientIds.length);
+
   // Combine doctor and user data
   const profile = {
     ...doctor,
     email: doctor.userId?.email,
     status: doctor.userId?.status,
     profilePicture: doctor.userId?.profilePicture,
+    totalPatients,
   };
 
   // Remove userId object, keep only the ID

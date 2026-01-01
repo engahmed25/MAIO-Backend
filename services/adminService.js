@@ -154,10 +154,11 @@ exports.listUsers = async ({
   sortOrder = "desc",
   includeDeleted = false,
 }) => {
-  const { skip, limit: parsedLimit, page: parsedPage } = buildPagination(
-    page,
-    limit
-  );
+  const {
+    skip,
+    limit: parsedLimit,
+    page: parsedPage,
+  } = buildPagination(page, limit);
 
   const matchStage = {};
   if (!includeDeleted) {
@@ -273,8 +274,7 @@ exports.listUsers = async ({
     sortBy === "lastLogin" || sortBy === "lastLoginAt"
       ? "lastLoginAt"
       : "createdAt";
-  const sortDirection =
-    String(sortOrder).toLowerCase() === "asc" ? 1 : -1;
+  const sortDirection = String(sortOrder).toLowerCase() === "asc" ? 1 : -1;
 
   pipeline.push(
     { $sort: { [sortField]: sortDirection, _id: -1 } },
@@ -302,9 +302,7 @@ exports.listUsers = async ({
   const result = await User.aggregate(pipeline);
   const docs = (result[0] && result[0].docs) || [];
   const total =
-    result[0] && result[0].totalCount[0]
-      ? result[0].totalCount[0].count
-      : 0;
+    result[0] && result[0].totalCount[0] ? result[0].totalCount[0].count : 0;
 
   return {
     users: docs,
@@ -355,7 +353,9 @@ exports.getUserById = async (userId) => {
 exports.updateUserStatus = async (userId, status, actingAdminId) => {
   const normalizedStatus = normalizeStatusInput(status);
   if (!normalizedStatus) {
-    const err = new Error("Status must be pending, approved, active, or suspended");
+    const err = new Error(
+      "Status must be pending, approved, active, or suspended"
+    );
     err.statusCode = 400;
     throw err;
   }
@@ -460,7 +460,9 @@ exports.updateVerificationStatus = async (
   }
 
   if (normalizedStatus === "rejected" && !rejectionReason) {
-    const err = new Error("rejectionReason is required when rejecting a profile");
+    const err = new Error(
+      "rejectionReason is required when rejecting a profile"
+    );
     err.statusCode = 400;
     throw err;
   }
@@ -540,12 +542,30 @@ exports.getDashboardMetrics = async () => {
       { $match: activeUsersMatch },
       { $group: { _id: "$role", count: { $sum: 1 } } },
     ]),
-    User.countDocuments({ ...activeUsersMatch, createdAt: { $gte: startOfToday } }),
-    User.countDocuments({ ...activeUsersMatch, createdAt: { $gte: startOfWeek } }),
-    User.countDocuments({ ...activeUsersMatch, createdAt: { $gte: startOfMonth } }),
-    User.countDocuments({ ...activeUsersMatch, lastLoginAt: { $gte: startOfToday } }),
-    User.countDocuments({ ...activeUsersMatch, lastLoginAt: { $gte: startOfWeek } }),
-    User.countDocuments({ ...activeUsersMatch, lastLoginAt: { $gte: startOfMonth } }),
+    User.countDocuments({
+      ...activeUsersMatch,
+      createdAt: { $gte: startOfToday },
+    }),
+    User.countDocuments({
+      ...activeUsersMatch,
+      createdAt: { $gte: startOfWeek },
+    }),
+    User.countDocuments({
+      ...activeUsersMatch,
+      createdAt: { $gte: startOfMonth },
+    }),
+    User.countDocuments({
+      ...activeUsersMatch,
+      lastLoginAt: { $gte: startOfToday },
+    }),
+    User.countDocuments({
+      ...activeUsersMatch,
+      lastLoginAt: { $gte: startOfWeek },
+    }),
+    User.countDocuments({
+      ...activeUsersMatch,
+      lastLoginAt: { $gte: startOfMonth },
+    }),
     Appointment.countDocuments(),
   ]);
 
@@ -581,8 +601,7 @@ exports.getDashboardMetrics = async () => {
       rejected: rejectedVerificationCount,
       verifiedVsUnverified: {
         verified: approvedVerificationCount,
-        unverified:
-          pendingVerificationCount + rejectedVerificationCount,
+        unverified: pendingVerificationCount + rejectedVerificationCount,
       },
     },
     newUsers: {
