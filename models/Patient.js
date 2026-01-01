@@ -147,6 +147,63 @@ const patientSchema = new mongoose.Schema(
         ref: "Doctor",
       },
     ],
+    prescriptions: [
+      {
+        // Basic Drug Information
+        drugName: {
+          type: String,
+          required: true,
+          trim: true,
+          // Example: "Lisinopril"
+        },
+        concentration: {
+          type: String,
+          required: true,
+          trim: true,
+          // Example: "5mg", "10ml"
+        },
+
+        // Dosage Information
+        timesPerDay: {
+          type: Number,
+          required: true,
+          min: 1,
+          // Example: 1 (once daily), 2 (twice daily)
+        },
+        dosageTiming: {
+          type: String,
+          required: true,
+          // Example: "Once daily in the morning", "Twice daily (morning and evening)"
+        },
+
+        // Doctor Information
+        prescribedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Doctor",
+          required: true,
+        },
+
+        // Date Information
+        startDate: {
+          type: Date,
+          required: true,
+          default: Date.now,
+        },
+
+        // Status
+        status: {
+          type: String,
+          enum: ["active", "completed", "discontinued"],
+          default: "active",
+        },
+
+        // Optional Notes
+        notes: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
