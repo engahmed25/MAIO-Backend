@@ -71,6 +71,13 @@ router.put(
   patientController.updateMedicalHistory
 );
 
+router.get(
+  "/me/medical-history",
+  protect,
+  authorize("patient"),
+  patientController.getMyMedicalHistory
+);
+
 // Medical documents
 router.post(
   "/me/medical-documents",
@@ -86,6 +93,13 @@ router.get(
   protect,
   authorize("patient"),
   patientController.getMedicalRecords
+);
+
+router.get(
+  "/medical-history/:patientId",
+  protect,
+  authorize("doctor"),
+  patientController.getPatientMedicalHistory
 );
 
 router.get(

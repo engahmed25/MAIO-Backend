@@ -282,6 +282,43 @@ exports.getMedicalRecordsService = async (userId) => {
   };
 };
 
+exports.getPatientMedicalHistoryService = async (patientId) => {
+  if (!mongoose.Types.ObjectId.isValid(patientId)) {
+    throw new Error("Invalid patient ID format");
+  }
+
+  const patient = await Patient.findOne({ userId: patientId })
+    .select(
+      "firstName lastName gender age emergencyContactNumber reasonForSeeingDoctor drugAllergies illnesses otherIllness operations currentMedications smoking medicalHistory"
+    )
+    .populate("userId", "profilePicture")
+    .lean();
+
+  if (!patient) {
+    throw new Error("Patient profile not found");
+  }
+
+  return {
+    name: `${patient.firstName} ${patient.lastName}`,
+    profilePicture: patient.userId?.profilePicture || null,
+    gender: patient.gender,
+    age: patient.age,
+    emergencyContactNumber: patient.emergencyContactNumber,
+    reasonForSeeingDoctor: patient.reasonForSeeingDoctor,
+    drugAllergies: patient.drugAllergies,
+    illnesses: patient.illnesses,
+    otherIllness: patient.otherIllness,
+    operations: patient.operations,
+    currentMedications: patient.currentMedications,
+    smoking: patient.smoking,
+    medicalHistory: patient.medicalHistory || {
+      chronicDiseases: [],
+      allergies: [],
+      notes: "",
+    },
+  };
+};
+
 exports.getPatientMedicalDocumentsService = async (patientId) => {
   const patient = await Patient.findOne({ userId: patientId })
     .select(

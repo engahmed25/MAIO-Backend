@@ -17,6 +17,7 @@ const {
   softDeleteAccountService,
   getPatientMedicalDocumentsService,
   getAssignedDoctorService,
+  getPatientMedicalHistoryService,
 } = require("../services/patientService");
 
 // @desc    Get authenticated patient's profile
@@ -314,6 +315,66 @@ exports.getMedicalRecords = async (req, res) => {
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve medical records",
+    });
+  }
+};
+
+// @desc    Get my medical history snapshot (patient self)
+// @route   GET /api/patients/me/medical-history
+// @access  Private (patient)
+exports.getMyMedicalHistory = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== "patient") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Patient role required",
+      });
+    }
+
+    const history = await getPatientMedicalHistoryService(req.user._id);
+    return res.status(200).json({
+      success: true,
+      message: "Medical history retrieved successfully",
+      data: history,
+    });
+  } catch (error) {
+    console.error("Get my medical history error:", error);
+    const status =
+      error.message === "Patient profile not found"
+        ? 404
+        : error.message === "Invalid patient ID format"
+        ? 400
+        : 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Failed to retrieve medical history",
+    });
+  }
+};
+
+// @desc    Get patient medical history snapshot
+// @route   GET /api/patients/medical-history/:patientId
+// @access  Private (doctor)
+exports.getPatientMedicalHistory = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const history = await getPatientMedicalHistoryService(patientId);
+    return res.status(200).json({
+      success: true,
+      message: "Patient medical history retrieved successfully",
+      data: history,
+    });
+  } catch (error) {
+    console.error("Get patient medical history error:", error);
+    const status =
+      error.message === "Invalid patient ID format"
+        ? 400
+        : error.message === "Patient profile not found"
+        ? 404
+        : 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "Failed to retrieve patient medical history",
     });
   }
 };
