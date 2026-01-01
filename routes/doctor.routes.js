@@ -29,6 +29,16 @@ router.get(
   appointmentController.getUpcomingForDoctor
 );
 
+// @route   GET /api/doctors/patients/:patientId/doctors
+// @desc    Get all other doctors a patient has seen (requires an appointment with the authenticated doctor)
+// @access  Private (Doctor only)
+router.get(
+  "/patients/:patientId/doctors",
+  protect,
+  authorize("doctor"),
+  doctorController.getPatientDoctors
+);
+
 // @route   GET /api/doctors/:doctorId
 // @desc    Get doctor profile by ID
 // @access  Private (Authenticated users)
