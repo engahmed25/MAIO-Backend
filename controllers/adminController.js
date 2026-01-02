@@ -6,6 +6,7 @@ const {
   updateUserStatus,
   softDeleteUser,
   updateVerificationStatus,
+  getAllAppointments: getAllAppointmentsService,
   getDashboardMetrics,
 } = require("../services/adminService");
 const { loginService } = require("../services/authService");
@@ -111,6 +112,47 @@ exports.getPendingUsers = async (req, res) => {
     return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message || "Failed to fetch pending users",
+    });
+  }
+};
+
+exports.getAppointments = async (req, res) => {
+  try {
+    const {
+      page,
+      limit,
+      status,
+      doctorId,
+      patientId,
+      startDate,
+      endDate,
+      sortBy,
+      sortOrder,
+    } = req.query;
+
+    const result = await getAllAppointmentsService({
+      page,
+      limit,
+      status,
+      doctorId,
+      patientId,
+      startDate,
+      endDate,
+      sortBy,
+      sortOrder,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Appointments fetched successfully",
+      data: result.appointments,
+      pagination: result.pagination,
+    });
+  } catch (error) {
+    console.error("Get appointments error:", error);
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to fetch appointments",
     });
   }
 };
