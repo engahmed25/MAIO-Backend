@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const Admin = require("../models/Admin");
 const Doctor = require("../models/Doctor");
@@ -96,6 +97,59 @@ const calculateProfileCompletion = (
     return calculateAdminCompletion(adminProfile, user);
   }
   return 0;
+};
+
+const APPOINTMENT_STATUS_VALUES = [
+  "scheduled",
+  "confirmed",
+  "cancelled",
+  "completed",
+  "no-show",
+];
+
+const parseAppointmentStatuses = (status) => {
+  if (!status) return undefined;
+
+  const statuses = (Array.isArray(status) ? status : String(status).split(","))
+    .map((value) => value && value.toString().trim().toLowerCase())
+    .filter(Boolean);
+
+  if (statuses.length === 0) {
+    return undefined;
+  }
+
+  const invalid = statuses.filter(
+    (value) => !APPOINTMENT_STATUS_VALUES.includes(value)
+  );
+
+  if (invalid.length) {
+    const err = new Error(
+      `Invalid appointment status: ${invalid.join(", ")}`
+    );
+    err.statusCode = 400;
+    throw err;
+  }
+
+  return Array.from(new Set(statuses));
+};
+
+const parseDateOnly = (value, endOfDay = false) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    const err = new Error("Invalid date format. Use YYYY-MM-DD");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  parsed.setHours(
+    endOfDay ? 23 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 999 : 0
+  );
+  return parsed;
 };
 
 exports.createAdmin = async (data) => {
@@ -497,6 +551,160 @@ exports.updateVerificationStatus = async (
     verifiedAt: user.verifiedAt,
     verifiedBy: user.verifiedBy,
     rejectionReason: user.rejectionReason,
+  };
+};
+
+exports.getAllAppointments = async ({
+  page = 1,
+  limit = 10,
+  status,
+  doctorId,
+  patientId,
+  startDate,
+  endDate,
+  sortBy = "appointmentDate",
+  sortOrder = "desc",
+}) => {
+  const {
+    skip,
+    limit: parsedLimit,
+    page: parsedPage,
+  } = buildPagination(page, limit);
+
+  const matchStage = {};
+
+  const normalizedStatuses = parseAppointmentStatuses(status);
+  if (normalizedStatuses) {
+    matchStage.status = { $in: normalizedStatuses };
+  }
+
+  if (doctorId) {
+    if (!mongoose.Types.ObjectId.isValid(doctorId)) {
+      const err = new Error("Invalid doctorId");
+      err.statusCode = 400;
+      throw err;
+    }
+    matchStage.doctorId = new mongoose.Types.ObjectId(doctorId);
+  }
+
+  if (patientId) {
+    if (!mongoose.Types.ObjectId.isValid(patientId)) {
+      const err = new Error("Invalid patientId");
+      err.statusCode = 400;
+      throw err;
+    }
+    matchStage.patientId = new mongoose.Types.ObjectId(patientId);
+  }
+
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate, true);
+
+  if (start || end) {
+    matchStage.appointmentDate = {};
+    if (start) matchStage.appointmentDate.$gte = start;
+    if (end) matchStage.appointmentDate.$lte = end;
+  }
+
+  const sortField =
+    sortBy === "createdAt" ? "createdAt" : "appointmentDate";
+  const sortDirection = String(sortOrder).toLowerCase() === "asc" ? 1 : -1;
+
+  const [appointments, total] = await Promise.all([
+    Appointment.find(matchStage)
+      .populate({
+        path: "patientId",
+        select:
+          "firstName lastName age gender emergencyContactNumber reasonForSeeingDoctor currentMedications drugAllergies illnesses userId",
+        populate: {
+          path: "userId",
+          select:
+            "email phoneNumber status verificationStatus profilePicture isDeleted",
+        },
+      })
+      .populate({
+        path: "doctorId",
+        select:
+          "firstName lastName specialization yearsOfExperience clinicAddress ratePerSession userId",
+        populate: {
+          path: "userId",
+          select:
+            "email phoneNumber status verificationStatus profilePicture isDeleted",
+        },
+      })
+      .sort({ [sortField]: sortDirection, startTime: sortDirection })
+      .skip(skip)
+      .limit(parsedLimit)
+      .lean(),
+    Appointment.countDocuments(matchStage),
+  ]);
+
+  const formatPatient = (patient) => {
+    if (!patient) return null;
+    const user = patient.userId || {};
+    return {
+      patientId: patient._id,
+      userId: user._id,
+      fullName: `${patient.firstName} ${patient.lastName}`.trim(),
+      firstName: patient.firstName,
+      lastName: patient.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      profilePicture: user.profilePicture,
+      status: user.status,
+      verificationStatus: user.verificationStatus,
+      age: patient.age,
+      gender: patient.gender,
+      emergencyContactNumber: patient.emergencyContactNumber,
+      reasonForSeeingDoctor: patient.reasonForSeeingDoctor,
+      currentMedications: patient.currentMedications,
+      drugAllergies: patient.drugAllergies,
+      illnesses: patient.illnesses,
+    };
+  };
+
+  const formatDoctor = (doctor) => {
+    if (!doctor) return null;
+    const user = doctor.userId || {};
+    return {
+      doctorId: doctor._id,
+      userId: user._id,
+      fullName: `Dr. ${doctor.firstName} ${doctor.lastName}`,
+      firstName: doctor.firstName,
+      lastName: doctor.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      profilePicture: user.profilePicture,
+      status: user.status,
+      verificationStatus: user.verificationStatus,
+      specialization: doctor.specialization,
+      yearsOfExperience: doctor.yearsOfExperience,
+      clinicAddress: doctor.clinicAddress,
+      ratePerSession: doctor.ratePerSession,
+    };
+  };
+
+  return {
+    appointments: appointments.map((appointment) => ({
+      _id: appointment._id,
+      appointmentDate: appointment.appointmentDate,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      status: appointment.status,
+      reasonForVisit: appointment.reasonForVisit,
+      notes: appointment.notes || "",
+      cancelledBy: appointment.cancelledBy || null,
+      cancellationReason: appointment.cancellationReason || null,
+      createdAt: appointment.createdAt,
+      updatedAt: appointment.updatedAt,
+      patient: formatPatient(appointment.patientId),
+      doctor: formatDoctor(appointment.doctorId),
+    })),
+    pagination: {
+      page: parsedPage,
+      limit: parsedLimit,
+      total,
+      pages: Math.ceil(total / parsedLimit) || 0,
+    },
   };
 };
 

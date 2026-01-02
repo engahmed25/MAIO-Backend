@@ -6,6 +6,7 @@ const {
   login,
   getUsers,
   getPendingUsers,
+  getAppointments,
   getUser,
   updateStatus,
   softDelete,
@@ -31,6 +32,13 @@ router.get(
   protect,
   authorize("admin"),
   getMetrics
+);
+
+router.get(
+  "/appointments",
+  protect,
+  authorize("admin"),
+  getAppointments
 );
 
 // Admin-only user management
