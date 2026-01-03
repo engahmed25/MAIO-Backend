@@ -123,9 +123,7 @@ const parseAppointmentStatuses = (status) => {
   );
 
   if (invalid.length) {
-    const err = new Error(
-      `Invalid appointment status: ${invalid.join(", ")}`
-    );
+    const err = new Error(`Invalid appointment status: ${invalid.join(", ")}`);
     err.statusCode = 400;
     throw err;
   }
@@ -308,6 +306,17 @@ exports.listUsers = async ({
             },
           ],
         },
+        phoneNumber: {
+          $ifNull: [
+            { $arrayElemAt: ["$doctorProfile.phoneNumber", 0] },
+            {
+              $ifNull: [
+                { $arrayElemAt: ["$patientProfile.phoneNumber", 0] },
+                { $arrayElemAt: ["$adminProfile.phoneNumber", 0] },
+              ],
+            },
+          ],
+        },
       },
     },
   ];
@@ -395,12 +404,23 @@ exports.getUserById = async (userId) => {
     adminProfile
   );
 
+  // Get total patients under care if user is a doctor
+  let totalPatients = 0;
+  if (doctorProfile) {
+    const patientIds = await Appointment.distinct("patientId", {
+      doctorId: doctorProfile._id,
+      status: { $in: ["confirmed", "completed"] },
+    });
+    totalPatients = patientIds.length;
+  }
+
   return {
     ...user,
     doctorProfile: doctorProfile || null,
     patientProfile: patientProfile || null,
     adminProfile: adminProfile || null,
     profileCompletion,
+    totalPatients,
   };
 };
 
@@ -605,8 +625,7 @@ exports.getAllAppointments = async ({
     if (end) matchStage.appointmentDate.$lte = end;
   }
 
-  const sortField =
-    sortBy === "createdAt" ? "createdAt" : "appointmentDate";
+  const sortField = sortBy === "createdAt" ? "createdAt" : "appointmentDate";
   const sortDirection = String(sortOrder).toLowerCase() === "asc" ? 1 : -1;
 
   const [appointments, total] = await Promise.all([
