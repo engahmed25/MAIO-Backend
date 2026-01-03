@@ -12,10 +12,10 @@ const chatHandler = require("./sockets/chatHandler");
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup
+// Socket.io setup - OPEN CORS
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "*",
+    origin: true, // Allow all origins with credentials
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -36,13 +36,18 @@ const appointmentRouter = require("./routes/appointment.routes");
 const reservationRouter = require("./routes/reservation.routes");
 const paymentRouter = require("./routes/payment.routes");
 
-// Middleware
+// Middleware - OPEN CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "*",
-    credentials: true,
+    origin: true, // Allow all origins
+    credentials: true, // Allow credentials
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
+// Handle preflight requests
+// app.options("/*", cors());
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
