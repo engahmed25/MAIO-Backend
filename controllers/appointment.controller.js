@@ -1,6 +1,7 @@
 const appointmentService = require("../services/appointment.service");
 const Patient = require("../models/Patient");
 const Doctor = require("../models/Doctor");
+const { notifyUser } = require("../services/notification.service");
 
 const getPatientIdFromUser = async (userId) => {
   const patient = await Patient.findOne({ userId }).select("_id");
@@ -38,6 +39,25 @@ exports.confirmAppointment = async (req, res) => {
         reservationId,
         patientId,
       });
+
+    // Notify doctor about new appointment
+    try {
+      const doctor = await Doctor.findById(appointment.doctorId).select('userId');
+      if (doctor && doctor.userId) {
+        const appointmentDate = new Date(appointment.appointmentDate).toLocaleDateString();
+        const appointmentTime = `${appointment.startTime}-${appointment.endTime}`;
+        await notifyUser(
+          doctor.userId,
+          'Doctor',
+          `New appointment scheduled for ${appointmentDate} at ${appointmentTime}`,
+          'appointment',
+          'appointment',
+          appointment._id
+        );
+      }
+    } catch (notifyError) {
+      console.error('Error notifying doctor:', notifyError.message);
+    }
 
     res.status(201).json({
       success: true,

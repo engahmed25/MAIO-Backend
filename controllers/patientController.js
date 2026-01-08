@@ -20,6 +20,8 @@ const {
   getPatientMedicalHistoryService,
   getPrescriptionsService,
 } = require("../services/patientService");
+const { notifyUser } = require("../services/notification.service");
+const Doctor = require("../models/Doctor");
 
 // @desc    Get authenticated patient's profile
 // @route   GET /api/patients/me
@@ -271,6 +273,27 @@ exports.uploadMedicalDocument = async (req, res) => {
       file,
       req.body || {}
     );
+
+    // Notify all assigned doctors about new document
+    try {
+      const doctors = await Doctor.find({ assignedPatients: { $in: [req.user._id] } }).select('userId');
+      if (doctors && doctors.length > 0) {
+        const documentType = req.body?.documentType || 'medical document';
+        const notifyPromises = doctors.map(doctor =>
+          notifyUser(
+            doctor.userId,
+            'Doctor',
+            `Patient uploaded a new ${documentType}`,
+            'info',
+            'document',
+            document._id
+          ).catch(err => console.error('Error notifying doctor:', err.message))
+        );
+        await Promise.all(notifyPromises);
+      }
+    } catch (notifyError) {
+      console.error('Error notifying doctors about document:', notifyError.message);
+    }
 
     return res.status(201).json({
       success: true,
