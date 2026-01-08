@@ -2,6 +2,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Doctor = require("../models/Doctor");
+const Patient = require("../models/Patient");
 
 exports.socketAuthMiddleware = async (socket, next) => {
   try {
@@ -48,6 +49,7 @@ exports.socketAuthMiddleware = async (socket, next) => {
     socket.userRole = user.role;
     socket.user = {
       _id: user._id,
+      id: user._id,
       email: user.email,
       role: user.role,
       firstName: profile?.firstName || "Unknown",

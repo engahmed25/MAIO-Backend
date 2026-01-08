@@ -4,6 +4,8 @@ const Payment = require("../models/Payment");
 const Reservation = require("../models/Reservation");
 const Appointment = require("../models/Appointment");
 const Patient = require("../models/Patient");
+const Doctor = require("../models/Doctor");
+const { notifyUser } = require("./notification.service");
 const reservationService = require("./reservation.service");
 
 const STRIPE_CURRENCY = (process.env.STRIPE_CURRENCY || "usd").toLowerCase();
@@ -217,6 +219,25 @@ const performBooking = async ({ reservationId, reservation, intent, session }) =
     appointmentId: appointment._id,
     session,
   });
+
+  // Notify the doctor about the confirmed appointment
+  try {
+    const doctor = await Doctor.findById(reservation.doctorId).select("userId");
+    if (doctor?.userId) {
+      const appointmentDate = new Date(reservation.appointmentDate).toLocaleDateString();
+      const appointmentTime = `${reservation.startTime}-${reservation.endTime}`;
+      await notifyUser(
+        doctor.userId,
+        "Doctor",
+        `New appointment confirmed for ${appointmentDate} at ${appointmentTime}`,
+        "appointment",
+        "appointment",
+        appointment._id
+      );
+    }
+  } catch (notifyErr) {
+    console.error("Error notifying doctor about appointment:", notifyErr.message);
+  }
 
   return appointment;
 };

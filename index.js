@@ -8,11 +8,12 @@ const { Server } = require("socket.io");
 const { socketAuthMiddleware } = require("./middleware/socketAuthMiddleware");
 const connectDB = require("./config/db");
 const chatHandler = require("./sockets/chatHandler");
+const { initializeSocket } = require("./sockets");
 
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup - OPEN CORS
+// Socket.io setup - OPEN CORS 
 const io = new Server(server, {
   cors: {
     origin: true, // Allow all origins with credentials
@@ -22,6 +23,9 @@ const io = new Server(server, {
   pingTimeout: 60000,
   pingInterval: 25000,
 });
+
+// Register notification handlers and expose io to services
+initializeSocket(io);
 
 // Import routes
 const roomRoutes = require("./routes/room.routes");
@@ -35,6 +39,10 @@ const availabilityRouter = require("./routes/availability.routes");
 const appointmentRouter = require("./routes/appointment.routes");
 const reservationRouter = require("./routes/reservation.routes");
 const paymentRouter = require("./routes/payment.routes");
+const notificationRoutes = require('./routes/notificationRoutes');
+const prescriptionRoutes = require('./routes/prescriptionRoutes');
+
+
 
 // Middleware - OPEN CORS
 app.use(
@@ -76,6 +84,8 @@ app.use("/api/payments", paymentRouter);
 app.use("/api/v1/rooms", roomRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/files", fileUploadRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
 
 // 404 Handler
 app.use((req, res) => {
