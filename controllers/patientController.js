@@ -22,6 +22,8 @@ const {
 } = require("../services/patientService");
 const { notifyUser } = require("../services/notification.service");
 const Doctor = require("../models/Doctor");
+const Patient = require("../models/Patient");
+const Appointment = require("../models/Appointment");
 
 // @desc    Get authenticated patient's profile
 // @route   GET /api/patients/me
@@ -69,8 +71,8 @@ exports.getPublicProfile = async (req, res) => {
       error.message === "Invalid patient ID format"
         ? 400
         : error.message === "Patient profile not found"
-        ? 404
-        : 500;
+          ? 404
+          : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve public profile",
@@ -175,7 +177,7 @@ exports.deleteProfilePicture = async (req, res) => {
     console.error("Delete profile picture error:", error);
     const status =
       error.message === "User not found" ||
-      error.message === "Patient profile not found"
+        error.message === "Patient profile not found"
         ? 404
         : 500;
     return res.status(status).json({
@@ -274,25 +276,52 @@ exports.uploadMedicalDocument = async (req, res) => {
       req.body || {}
     );
 
-    // Notify all assigned doctors about new document
+    // ✅ Notify all treating doctors about new document upload
     try {
-      const doctors = await Doctor.find({ assignedPatients: { $in: [req.user._id] } }).select('userId');
-      if (doctors && doctors.length > 0) {
-        const documentType = req.body?.documentType || 'medical document';
-        const notifyPromises = doctors.map(doctor =>
-          notifyUser(
-            doctor.userId,
-            'Doctor',
-            `Patient uploaded a new ${documentType}`,
-            'info',
-            'document',
-            document._id
-          ).catch(err => console.error('Error notifying doctor:', err.message))
-        );
-        await Promise.all(notifyPromises);
+      // Get patient profile
+      const patient = await Patient.findOne({ userId: req.user._id }).select('firstName lastName _id');
+
+      // Find all doctors who have appointments with this patient
+      const appointments = await Appointment.find({
+        patientId: patient._id,
+        status: { $in: ['scheduled', 'confirmed', 'completed'] }
+      }).distinct('doctorId');
+
+      if (appointments && appointments.length > 0) {
+        // Get doctor userIds from Doctor collection
+        const doctors = await Doctor.find({ _id: { $in: appointments } }).select('userId firstName lastName');
+
+        if (doctors && doctors.length > 0) {
+          const patientName = `${patient.firstName} ${patient.lastName}`;
+          const documentType = req.body?.documentType || 'medical document';
+
+          // Notify each doctor
+          const notifyPromises = doctors.map(doctor =>
+            notifyUser(
+              doctor.userId,
+              'Doctor',
+              `${patientName} has uploaded a new medical document`,
+              'document_upload',
+              'document',
+              document._id,
+              null, // actionUrl
+              {
+                patientId: patient._id.toString(),
+                patientName: patientName,
+                documentId: document._id.toString(),
+                documentType: documentType,
+                uploadedAt: new Date().toISOString()
+              }
+            ).catch(err => console.error('Error notifying doctor:', err.message))
+          );
+
+          await Promise.all(notifyPromises);
+          console.log(`✅ Notified ${doctors.length} doctors about document upload from ${patientName}`);
+        }
       }
     } catch (notifyError) {
       console.error('Error notifying doctors about document:', notifyError.message);
+      // Don't fail the upload if notification fails
     }
 
     return res.status(201).json({
@@ -367,8 +396,8 @@ exports.getMyMedicalHistory = async (req, res) => {
       error.message === "Patient profile not found"
         ? 404
         : error.message === "Invalid patient ID format"
-        ? 400
-        : 500;
+          ? 400
+          : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve medical history",
@@ -394,8 +423,8 @@ exports.getPatientMedicalHistory = async (req, res) => {
       error.message === "Invalid patient ID format"
         ? 400
         : error.message === "Patient profile not found"
-        ? 404
-        : 500;
+          ? 404
+          : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve patient medical history",
@@ -452,11 +481,11 @@ exports.deleteMedicalDocument = async (req, res) => {
     console.error("Delete medical document error:", error);
     const status =
       error.message === "Invalid document ID format" ||
-      error.message === "Medical document not found"
+        error.message === "Medical document not found"
         ? 400
         : error.message === "Patient profile not found"
-        ? 404
-        : 500;
+          ? 404
+          : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to delete medical document",
@@ -685,8 +714,8 @@ exports.getAssignedDoctor = async (req, res) => {
       error.message === "Invalid patient ID format"
         ? 400
         : error.message === "Patient profile not found"
-        ? 404
-        : 500;
+          ? 404
+          : 500;
     return res.status(status).json({
       success: false,
       message: error.message || "Failed to retrieve assigned doctor profile",

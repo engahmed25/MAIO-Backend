@@ -32,4 +32,36 @@ const getMessage = async (req, res) => {
   }
 };
 
-module.exports = { getMessage };
+const getUnreadCount = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+
+    // Get doctor profile from user ID
+    const doctorProfile = await Doctor.findOne({ userId: req.user._id });
+
+    if (!doctorProfile) {
+      return res.status(404).json({ error: "Doctor profile not found" });
+    }
+
+    // Get unread messages count
+    const unreadMessages = await ChatService.getUnreadMessages(
+      roomId,
+      doctorProfile._id.toString()
+    );
+
+    res.json({
+      success: true,
+      unreadCount: unreadMessages ? unreadMessages.length : 0
+    });
+  } catch (error) {
+    if (error.message === "Access denied") {
+      return res.status(403).json({ error: error.message });
+    }
+    if (error.message === "Room not found") {
+      return res.status(404).json({ error: error.message });
+    }
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { getMessage, getUnreadCount };

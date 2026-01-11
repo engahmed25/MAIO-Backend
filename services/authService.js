@@ -156,7 +156,7 @@ exports.registerDoctorService = async (data, files) => {
     await user.save();
     await doctor.save();
     await createDoctorSchedule(doctor._id, slots);
-    await sendDoctorWelcomeEmail(doctor.fullName, user.email);
+    // await sendDoctorWelcomeEmail(doctor.fullName, user.email);
 
     return {
       user: {
@@ -269,7 +269,9 @@ exports.registerPatientService = async (data, file) => {
     user.refreshToken = refreshToken;
     await user.save();
     await patient.save();
-    await sendPatientWelcomeEmail(patient.fullName, user.email);
+
+    
+    // await sendPatientWelcomeEmail(patient.fullName, user.email);
 
     return {
       user: {

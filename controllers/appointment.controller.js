@@ -1,6 +1,7 @@
 const appointmentService = require("../services/appointment.service");
 const Patient = require("../models/Patient");
 const Doctor = require("../models/Doctor");
+const Appointment = require("../models/Appointment");
 const { notifyUser } = require("../services/notification.service");
 
 const getPatientIdFromUser = async (userId) => {
@@ -43,16 +44,29 @@ exports.confirmAppointment = async (req, res) => {
     // Notify doctor about new appointment
     try {
       const doctor = await Doctor.findById(appointment.doctorId).select('userId');
-      if (doctor && doctor.userId) {
+      const patient = await Patient.findById(patientId).select('firstName lastName');
+
+      if (doctor && doctor.userId && patient) {
+        const patientName = `${patient.firstName} ${patient.lastName}`;
         const appointmentDate = new Date(appointment.appointmentDate).toLocaleDateString();
         const appointmentTime = `${appointment.startTime}-${appointment.endTime}`;
+
         await notifyUser(
           doctor.userId,
           'Doctor',
-          `New appointment scheduled for ${appointmentDate} at ${appointmentTime}`,
+          `${patientName} has booked an appointment with you for ${appointmentDate} at ${appointmentTime}`,
+          'appointment_booked',
           'appointment',
-          'appointment',
-          appointment._id
+          appointment._id,
+          null,
+          {
+            appointmentId: appointment._id.toString(),
+            patientId: patientId.toString(),
+            doctorId: doctor._id.toString(),
+            appointmentDate: appointment.appointmentDate.toISOString(),
+            startTime: appointment.startTime,
+            endTime: appointment.endTime
+          }
         );
       }
     } catch (notifyError) {
@@ -223,6 +237,37 @@ exports.rescheduleAppointment = async (req, res) => {
       newEndTime,
     });
 
+    // ✅ Notify doctor about rescheduled appointment
+    try {
+      const doctor = await Doctor.findById(appointment.doctorId).select('userId');
+      const patient = await Patient.findById(patientId).select('firstName lastName');
+
+      if (doctor && doctor.userId && patient) {
+        const patientName = `${patient.firstName} ${patient.lastName}`;
+        const appointmentDate = new Date(appointment.appointmentDate).toLocaleDateString();
+        const appointmentTime = `${appointment.startTime}-${appointment.endTime}`;
+
+        await notifyUser(
+          doctor.userId,
+          'Doctor',
+          `${patientName} has rescheduled their appointment to ${appointmentDate} at ${appointmentTime}`,
+          'appointment_rescheduled',
+          'appointment',
+          appointment._id,
+          null,
+          {
+            appointmentId: appointment._id.toString(),
+            patientId: patientId.toString(),
+            doctorId: doctor._id.toString(),
+            newDate: appointment.appointmentDate.toISOString(),
+            newTime: appointmentTime
+          }
+        );
+      }
+    } catch (notifyError) {
+      console.error('Error notifying doctor about reschedule:', notifyError.message);
+    }
+
     res.status(200).json({
       success: true,
       message: "Appointment rescheduled successfully",
@@ -253,6 +298,37 @@ exports.cancelAppointment = async (req, res) => {
       appointmentId,
       patientId,
     });
+
+    // ✅ Notify doctor about cancelled appointment
+    try {
+      const appointment = await Appointment.findById(appointmentId)
+        .populate('doctorId', 'userId')
+        .populate('patientId', 'firstName lastName');
+
+      if (appointment && appointment.doctorId && appointment.doctorId.userId) {
+        const patientName = appointment.patientId
+          ? `${appointment.patientId.firstName} ${appointment.patientId.lastName}`
+          : 'Patient';
+        const appointmentDate = new Date(appointment.appointmentDate).toLocaleDateString();
+
+        await notifyUser(
+          appointment.doctorId.userId,
+          'Doctor',
+          `${patientName} has cancelled their appointment scheduled for ${appointmentDate}`,
+          'appointment_cancelled',
+          'appointment',
+          appointmentId,
+          null,
+          {
+            appointmentId: appointmentId.toString(),
+            patientId: patientId.toString(),
+            cancelledDate: appointment.appointmentDate.toISOString()
+          }
+        );
+      }
+    } catch (notifyError) {
+      console.error('Error notifying doctor about cancellation:', notifyError.message);
+    }
 
     res.status(200).json({
       success: true,

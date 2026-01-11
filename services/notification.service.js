@@ -18,12 +18,12 @@ const notifyAll = async (message, type = 'info') => {
   }
 };
 
-const notifyUser = async (userId, userModel, message, type = 'info', relatedEntityType = null, relatedEntityId = null, actionUrl = null) => {
+const notifyUser = async (userId, userModel, message, type = 'info', relatedEntityType = null, relatedEntityId = null, actionUrl = null, metadata = {}) => {
   try {
     const io = getIO();
-    
+
     // Save to database
-    await Notification.create({
+    const notification = await Notification.create({
       userId,
       userModel,
       message,
@@ -31,22 +31,25 @@ const notifyUser = async (userId, userModel, message, type = 'info', relatedEnti
       relatedEntityType,
       relatedEntityId,
       actionUrl,
+      metadata, // Add metadata support
     });
-    
-    // Send via socket
-    return sendNotificationToUser(io, userId, message, type);
+
+    // Send via socket with metadata
+    sendNotificationToUser(io, userId, message, type);
+
+    return notification;
   } catch (error) {
     console.error('Error in notifyUser:', error.message);
     throw error;
   }
 };
 
-const notifyUsers = async (userIds, userModel, message, type = 'info', relatedEntityType = null, relatedEntityId = null) => {
+const notifyUsers = async (userIds, userModel, message, type = 'info', relatedEntityType = null, relatedEntityId = null, metadata = {}) => {
   try {
     const io = getIO();
-    
+
     // Save to database for each user
-    await Notification.insertMany(
+    const notifications = await Notification.insertMany(
       userIds.map(userId => ({
         userId,
         userModel,
@@ -54,11 +57,14 @@ const notifyUsers = async (userIds, userModel, message, type = 'info', relatedEn
         type,
         relatedEntityType,
         relatedEntityId,
+        metadata, // Add metadata for each notification
       }))
     );
-    
+
     // Send via socket
-    return sendNotificationToUsers(io, userIds, message, type);
+    sendNotificationToUsers(io, userIds, message, type);
+
+    return notifications;
   } catch (error) {
     console.error('Error in notifyUsers:', error.message);
     throw error;

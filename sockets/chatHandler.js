@@ -1,5 +1,7 @@
 const ChatService = require("../services/ChatService");
 const Doctor = require("../models/Doctor");
+const { notifyUser } = require("../services/notification.service");
+const Room = require("../models/Room");
 
 // Track online doctors
 const onlineDoctors = new Map();
@@ -102,6 +104,45 @@ const chatHandler = async (io, socket) => {
           console.log(
             `Message sent in room ${roomId} by ${doctorProfile.firstName}`
           );
+
+          // ✅ Notify the other doctor about the new message
+          try {
+            // Get room details to find the other doctor
+            const room = await Room.findById(roomId).lean();
+
+            if (room) {
+              // Determine which doctor to notify (the one who didn't send the message)
+              const otherDoctorId = room.doctorAId.toString() === socket.doctorId
+                ? room.doctorBId
+                : room.doctorAId;
+
+              // Get the other doctor's userId for notification
+              const otherDoctor = await Doctor.findById(otherDoctorId).select('userId firstName lastName');
+
+              if (otherDoctor && otherDoctor.userId) {
+                const senderName = `Dr. ${doctorProfile.firstName} ${doctorProfile.lastName}`;
+
+                await notifyUser(
+                  otherDoctor.userId,
+                  'Doctor',
+                  `You have a new message from ${senderName}`,
+                  'new_message',
+                  'message',
+                  populatedMessage._id,
+                  null,
+                  {
+                    senderId: socket.doctorId,
+                    senderName: senderName,
+                    roomId: roomId,
+                    messagePreview: content ? content.substring(0, 50) : 'New message'
+                  }
+                );
+              }
+            }
+          } catch (notifyError) {
+            console.error('Error sending message notification:', notifyError.message);
+            // Don't fail message sending if notification fails
+          }
         } catch (error) {
           console.error("Error sending message:", error);
           socket.emit("error", { message: error.message });
