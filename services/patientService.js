@@ -326,7 +326,7 @@ exports.getPatientMedicalHistoryService = async (patientId) => {
 };
 
 exports.getPatientMedicalDocumentsService = async (patientId) => {
-  const patient = await Patient.findOne({ userId: patientId })
+  const patient = await Patient.findOne({ _id: patientId })
     .select(
       "medicalDocuments firstName lastName gender age emergencyContactNumber reasonForSeeingDoctor drugAllergies illnesses otherIllness operations currentMedications smoking medicalHistory assignedDoctors"
     )

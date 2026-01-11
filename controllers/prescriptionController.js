@@ -54,21 +54,76 @@ exports.createPrescription = async (req, res) => {
       notes,
     });
 
-    // Notify patient about new prescription
+    // ✅ Notify patient and all other treating doctors about new prescription
     try {
-      const patient = await Patient.findById(patientId).select('userId');
+      // Get patient and prescribing doctor info
+      const patient = await Patient.findById(patientId).select('userId firstName lastName');
+      const prescribingDoctor = await Doctor.findById(doctor._id).populate('userId', 'firstName lastName');
+
       if (patient && patient.userId) {
+        const doctorName = prescribingDoctor && prescribingDoctor.userId
+          ? `Dr. ${prescribingDoctor.userId.firstName} ${prescribingDoctor.userId.lastName}`
+          : 'Doctor';
+
+        // 1. Notify the patient
         await notifyUser(
           patient.userId,
           'Patient',
-          'Doctor has uploaded a new prescription for you',
-          'info',
+          `${doctorName} has uploaded a new prescription for you`,
+          'prescription_upload',
           'prescription',
-          prescription._id
+          prescription._id,
+          null,
+          {
+            patientId: patientId.toString(),
+            prescribingDoctorId: doctor._id.toString(),
+            prescribingDoctorName: doctorName,
+            prescriptionId: prescription._id.toString()
+          }
         );
+
+        // 2. Find all other doctors treating this patient
+        const appointments = await Appointment.find({
+          patientId: patientId,
+          status: { $in: ['scheduled', 'confirmed', 'completed'] }
+        }).distinct('doctorId');
+
+        if (appointments && appointments.length > 0) {
+          // Get all doctors except the prescribing doctor
+          const otherDoctors = await Doctor.find({
+            _id: { $in: appointments, $ne: doctor._id }
+          }).select('userId');
+
+          if (otherDoctors && otherDoctors.length > 0) {
+            const patientName = `${patient.firstName} ${patient.lastName}`;
+
+            // Notify each other doctor
+            const notifyPromises = otherDoctors.map(otherDoctor =>
+              notifyUser(
+                otherDoctor.userId,
+                'Doctor',
+                `${doctorName} has uploaded a new prescription for ${patientName}`,
+                'prescription_upload',
+                'prescription',
+                prescription._id,
+                null,
+                {
+                  patientId: patientId.toString(),
+                  prescribingDoctorId: doctor._id.toString(),
+                  prescribingDoctorName: doctorName,
+                  prescriptionId: prescription._id.toString()
+                }
+              ).catch(err => console.error('Error notifying other doctor:', err.message))
+            );
+
+            await Promise.all(notifyPromises);
+            console.log(`✅ Notified patient and ${otherDoctors.length} other doctors about prescription`);
+          }
+        }
       }
     } catch (notifyError) {
-      console.error('Error notifying patient about prescription:', notifyError.message);
+      console.error('Error notifying about prescription:', notifyError.message);
+      // Don't fail the prescription creation if notification fails
     }
 
     res.status(201).json({
